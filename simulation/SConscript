@@ -1,0 +1,7 @@
+# Scons build file
+
+# import global settings (CLHEP, ROOT, CCFLAGS, ..)
+Import('*')
+
+# build target
+env.Program(['simulation.cxx', Glob('*.cc')])

@@ -1,0 +1,15 @@
+# Scons build file
+
+# import global settings (CLHEP, ROOT, CCFLAGS, ..)
+Import('*')
+
+# Make a builder for ROOTCINT
+#rootcint = Builder(action = 'rootcint -f $TARGET -c $CCFLAGS ')
+
+#env2 = env.Clone(BUILDERS= { 'Rootcint' : rootcint })
+#env2.Rootcint('Dict.C')
+
+#o = Object('Dict.C')
+
+lib = env.SharedLibrary('AlignEvent', [Glob('*.cc')])
+Return(lib)

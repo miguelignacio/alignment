@@ -1,0 +1,84 @@
+Kalman Filter Alignment
+=======================
+
+This is a toy model with which you can perform Kalman Filter Alignment. It
+consists of a simulation package, the kalman alignment algorithm, and a
+validation package. Multiple scattering is simulated, and it is possible to
+generate particles according to the cosmic muon spectrum.
+
+Build instructions:
+===================
+
+This package relies on two external libraries, namely CLHEP
+(http://proj-clhep.web.cern.ch/proj-clhep/) and ROOT
+(http://root.cern.ch/). You will first need to install these packages.
+Adjust the SConstruct and the event/Makefile and util/Makefile accordingly.
+
+Currently two builder programs are used: SCons and make. First, you need to
+build two shared libraries. Go to the "event/" subdirectory and issue
+"make". Add the "event/" directory to your LD_LIBRARY_PATH. Go to the
+"util/" subdirectory and issue "make". Add the "util/" directory to your
+LD_LIBRARY_PATH. Go back to the main directory (where the Doxyfile and the
+SConstruct file reside). Run the SCons program by typing "scons" at the
+prompt. This will build all other programs. Run the simulation in the main
+directory with the command
+
+simulation/simulation cfg/simulation.cfg
+
+The program will simulate 10000 tracks in a misaligned detector,
+reconstruct the tracks, and show a display of all tracks. A file with all
+information necessary for the alignment of the detector is created, by
+default called "alignment_data.root". Open ROOT, load the shared library
+and open the alignment_data.root file. Then you can browse through it. An
+alternative is to use the event/event program to display the first 10 data
+records.
+
+After running the simulation, it is time for alignment. Run the alignment
+program with
+
+kfa/align cfg/align.cfg
+
+This runs the Kalman Alignment algorithm over the previously created data
+file. After finishing, it has created another file named
+"alignment_result.root". This file contains for each alignment parameter
+its evolution, i.e. its value for each processed track. These histograms
+are named "hAliParXXX" where XXX is the number of the alignment parameter.
+In addition, the final values of the alignment parameters are saved in the
+histogram hLimits. The values in each bin correspond to the alignment
+parameter after processing all tracks. The bin number corresponds to the
+alignment parameter number.
+
+Finally, you can validate whether the alignment procedure worked. Run the
+program
+
+validation/validation cfg/validation.cfg
+
+This will start the data-driven validation. The validation program will
+reprocess all tracks with the previously determined alignment parameters
+and compare the track chi^2 value before and after the alignment. The
+program creates three plots: A raw plot named "validation_1.pdf" and more
+refined plots "validation_2.pdf" and "validation_3.pdf". Looking at the
+latter ones is recommended. They shows a comparison between the track chi^2
+before alignment and after alignment. The file "validation_2.pdf" shows the
+track chi^2 directly. After alignment, the mean chi^2 should correspond to
+the number of degrees of freedom of each track. For each crossed layer, the
+track has two hits. E.g. for the default detector with six layers there are
+twelve hits. Since the track has four parameters (no magnetic field is
+simulated), the number of degrees of freedom for the track is 2*6-4 = 8. So
+you should expect that after alignment the mean chi^2 is approximately
+eight. In practive it will be smaller since some tracks do not cross some
+detectors, so the number of hits is on average smaller than 2*6. You can
+see the number of deegrees of freedom in the "validation_1.pdf" histogram.
+The third histogram, "validation_3.pdf", shows the so-called "normalized"
+chi^2-distribution, i.e. the value "chi^2/ndof" where ndof is the number of
+degrees of freedom as above. After alignment it is expected to be close to
+unity.
+
+
+You can configure the simulation, alignment and validation packages by
+editing the corresponding files in the cfg/ subdirectory.
+
+Have fun!
+
+
+Copyright &copy; 2005-2011 Martin Weber
