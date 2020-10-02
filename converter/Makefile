@@ -3,6 +3,11 @@
 #
 # mkw 2005-03-24
 
+# Name of the executable (code has to be in $(PROGRAM).$(ExeSrcSuf))
+PROGRAM       = Adapter
+# Extension for file containing the main program
+ExeSrcSuf     = cxx
+
 # Extension for files that go in a shared object (library)
 SrcSuf        = cc
 # Installation path for shared library
@@ -14,15 +19,14 @@ ROOTLIBS     := $(shell root-config --libs)
 ROOTGLIBS    := $(shell root-config --glibs)
 #ROOTGLIBS   += -lX3d
 
-# external includes / libraries
-#CLHEP_DIR = /Users/spaul/CLHEP/install_dir
-#CLHEP_VERSION = 2.4.1.3
-EXTINCDIR     = -I/usr/local/include/ -I$(CLHEP_DIR)/include
-EXTLIBS       = -L$(CLHEP_DIR)/lib -lCLHEP-Matrix-$(CLHEP_VERSION) -lCLHEP-Vector-$(CLHEP_VERSION)
+EXTLIBDIR =  lib/*.a -L../event ../event/*.so
 
 ######################################################################
 # You should not modify the lines below here
 #
+# main program
+MAINSRC       = $(PROGRAM).$(ExeSrcSuf)
+MAINOBJECTS   = $(MAINSRC:.$(ExeSrcSuf)=.o)
 
 # Linux with gcc / g++ / g77
 FC            = g77
@@ -37,8 +41,7 @@ CXXFLAGS     += $(ROOTCFLAGS)
 
 LD            = g++
 LDFLAGS       = -O2 -fsignaling-nans -g # -pg for gprof
-LDFLAGS      += $(ROOTGLIBS)
-LDFLAGS      += $(EXTLIBS)     # external libraries should be here
+LDFLAGS      += $(ROOTGLIBS) $(EXTLIBDIR)
 SOFLAGS       = -shared
 
 SOURCES       = $(wildcard *.$(SrcSuf))
@@ -48,14 +51,14 @@ DEPENDS       = $(SOURCES:.$(SrcSuf)=.d)
 DEPENDS      += $(MAINSRC:.$(ExeSrcSuf)=.d)
 
 DICT	      = Dict
-SO	      = libUtilities.so
+SO	      = libAdapter.so
 
 DATE	     := $(shell date "+%F")
 
 ######################################################################
 # default targets
 
-all:            $(SO)
+all:            $(PROGRAM)
 
 clean:
 		@rm -f $(OBJECTS) $(MAINOBJECTS) $(PROGRAM) $(SO) $(DICT).* $(DEPENDS)
@@ -66,7 +69,7 @@ distclean:      clean
 tarball:
 		tar cvjf kfa-$(DATE).tar.bz2 Makefile *.h *.cc *.cxx
 
-install:	$(SO)
+install:	$(PROGRAM)
 		cp -a $(SO) $(LIBDIR)
 
 uninstall:
@@ -108,8 +111,11 @@ $(DICT).C: $(HEADERS) LinkDef.h
 ######################################################################
 # targets
 
+align.test: $(MAINOBJECTS) $(OBJECTS) $(DICT).o
+	$(LD) $(LDFLAGS) $+ -o $@
+
 $(PROGRAM): 	$(SO) $(MAINOBJECTS)
-	$(LD) $(LDFLAGS) $(EXTLIBS) $+ -o $@
+	$(LD) $(LDFLAGS) $+ -o $@
 
 $(SO):     $(OBJECTS) $(DICT).o
 		$(LD) $(SOFLAGS) $(LDFLAGS) $+ -o $@

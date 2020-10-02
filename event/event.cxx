@@ -10,15 +10,22 @@ using namespace std;
 
 int main(int argc, char * argv[]) 
 {
-  const int nEvents = 10;
-  /* // initialize ROOT
-  TROOT root("root", "root");
+  if(argc<2){
+    cout << "usage:\nevent fileName.root\nprints the matrices for the first 10 events in fileName.root" << endl;
+    return 0;
+  }
 
+  const int nEvents = 10;
+   // initialize ROOT
+  TROOT root("root", "root");
+  std::cout << "hello world" <<std::endl;
+  
   // create event
   AlignEvent * event = new AlignEvent;
 
+  
   // prepare reading
-  TFile f1("alignment_data.root", "READ");
+  TFile f1(argv[1], "READ");
   f1.Print();
   f1.ls();
   AlignInfo * ainfo = (AlignInfo *) f1.Get("AlignInfo");
@@ -47,5 +54,5 @@ int main(int argc, char * argv[])
     event->GetTrackPrediction()->Print();
   }
   f1.Close();
-  */
+  
 }
