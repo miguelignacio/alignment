@@ -1,0 +1,277 @@
+#include <cstdlib>
+#include <list>
+#include <iostream>
+#include <chrono>
+#include <TFile.h>
+#include <TTree.h>
+#include <TApplication.h>
+#include <TROOT.h>
+#include <TDatabasePDG.h>
+#include <TLorentzVector.h>
+#include <TH1.h>
+#include <TH2.h>
+#include <TChain.h>
+#include <TStyle.h>
+#include <TLine.h>
+#include <TText.h>
+#include <TCanvas.h>
+#include <TBenchmark.h>
+#include <TLegend.h>
+#include "../event/AlignEvent.h"
+
+
+#include <iostream>
+
+
+
+#include "TROOT.h"
+#include "TTree.h"
+#include "TFile.h"
+
+using namespace std;
+
+
+
+int main(int argc, char * argv[]) {
+  // Record start time
+  auto start = std::chrono::high_resolution_clock::now();
+  
+  TString inputFileName;
+  TString plotsDir;
+  
+  vector<TString> inputFiles;
+  for(Int_t i=1;i<argc;i++){
+    TString opt=argv[i];
+    if((opt.Contains("--in="))){
+      inputFileName=opt(5,opt.Sizeof());
+
+    } 
+      
+    if (opt.Contains("--plotsdir=")){
+      plotsDir = opt(11,opt.Sizeof());
+    }
+  }
+  //if there is no input file
+  if(inputFileName==TString())  {
+    std::cout << " *** please provide a file name..." << std::endl;
+    exit(0);
+  }
+  /////////////////////////////////////
+  
+  TFile * inputFile = TFile::Open(inputFileName);
+  
+  // 42 SVT modules
+  // TODO remove hardcode
+  AlignInfo* ai = (AlignInfo*)inputFile->Get("AlignInfo");
+
+  ai->Write();
+  AlignEvent *aevent = new AlignEvent();
+  TTree *AlignTree = (TTree*)inputFile->Get("AlignTree");
+  AlignTree->SetBranchAddress("AlignEvent", & aevent);
+  // auto save every MB
+  //AlignTree->SetAutoSave(1000000);
+
+  // these histograms are for debugging.  The limits and labels for
+  // some of these histograms are taylored for the Clas12 CVT.
+  gStyle->SetTitleSize(0.05,"XYZT");
+  gStyle->SetPadLeftMargin(.13);
+  gStyle->SetPadBottomMargin(.13);
+  TH1F*  hchi2 = new TH1F("hchi2", "track #chi^{2}", 100, 0, 100);
+  TH1F*  hchi2ndof = new TH1F("hchi2ndof", "track #chi^{2}/ndof;track #chi^{2}/n_{dof};# of events", 100, 0, 10);
+  TH1F*  hchi2prob = new TH1F("hchi2prob", "track #chi^{2} probability;p(#chi^2,n_{dof};# of events", 100, 0, 1);
+  TH1F*  hndof = new TH1F("hndof", "degrees of freedom;n_{dof};# of events", 20, 0, 20);
+  TH1F*  hncross = new TH1F("hncross", "number of crosses used;# of crosses;# of events", 20, 0, 20);
+  TH1F*  hres = new TH1F("hres", "resolution;resolution (mm);# of clusters", 100, 0, 0.1);
+  TH2F*  hresmodule =	new TH2F("hresmodule", "resolution (mm);resolution;module id", 100, 0, 0.1,50,0,50);
+  TH1F*  hmodule = new TH1F("hmodule", "module;module id;# of clusters", 50, 0, 50);
+  
+  TH1F*  htrackderiv1 = new TH1F("htrackderiv1", "Track derivatives (x ref);B_{i,0} (dimensionless);# of clusters", 100, -4, 4);
+  TH1F*  htrackderiv2 = new TH1F("htrackderiv2", "Track derivatives (z ref);B_{i,1} (dimensionless);# of clusters", 100, -0.07, 0.03);
+  TH1F*  htrackderiv3 = new TH1F("htrackderiv3", "Track derivatives (tilt x);B_{i,2} (mm);# of clusters", 100, -300, 300);
+  TH1F*  htrackderiv4 = new TH1F("htrackderiv4", "Track derivatives (tilt z);B_{i,3} (mm);# of clusters", 100, -10, 10);
+  TH2F*  htrackderiv1mod = new TH2F("htrackderiv1mod", "Track derivatives (x ref);B_{i,0} (dimensionless);module id", 100, -4, 4,50,0,50);
+  TH2F*  htrackderiv2mod = new TH2F("htrackderiv2mod", "Track derivatives (z ref);B_{i,1} (dimensionless);module id", 100, -0.07, 0.03,50,0,50);
+  TH2F*  htrackderiv3mod = new TH2F("htrackderiv3mod", "Track derivatives (tilt x);B_{i,2} (mm);module id", 100, -300, 300,50,0,50);
+  TH2F*  htrackderiv4mod = new TH2F("htrackderiv4mod", "Track derivatives (tilt z);B_{i,3} (mm);module id", 100, -10, 10,50,0,50);
+
+  TH1F*  halignderiv1 = new TH1F("halignderiv1", "Alignment derivatives (shift x);A_{i,0} (dimensionless);# of clusters", 100, -4, 4);
+  TH1F*  halignderiv2 = new TH1F("halignderiv2", "Alignment derivatives (shift y);A_{i,1} (dimensionless);# of clusters", 100, -1, 1);
+  TH1F*  halignderiv3 = new TH1F("halignderiv3", "Alignment derivatives (shift z);A_{i,2} (dimensionless);# of clusters", 100, -0.03, 0.07);
+  TH1F*  halignderiv4 = new TH1F("halignderiv4", "Alignment derivatives (rotate x);A_{i,3} (mm/rad);# of clusters", 100, -300, 300);
+  TH1F*  halignderiv5 = new TH1F("halignderiv5", "Alignment derivatives (rotate y);A_{i,4} (mm/rad);# of clusters", 100, -300, 300);
+  TH1F*  halignderiv6 = new TH1F("halignderiv6", "Alignment derivatives (rotate z);A_{i,5} (mm/rad);# of clusters", 100, -300, 300);
+
+  TH2F*  halignderiv1mod = new TH2F("halignderiv1mod", "Alignment derivatives (shift x);A_{i,0} (dimensionless);module id", 100, \
+-4, 4,50,0,50);
+  TH2F*  halignderiv2mod = new TH2F("halignderiv2mod", "Alignment derivatives (shift y);A_{i,1} (dimensionless);module id", 100, \
+-1, 1, 50,0,50);
+  TH2F*  halignderiv3mod = new TH2F("halignderiv3mod", "Alignment derivatives (shift z);A_{i,2} (dimensionless);module id", 100, \
+-0.03, 0.07,50,0,50);
+  TH2F*  halignderiv4mod = new TH2F("halignderiv4mod", "Alignment derivatives (rotate x);A_{i,3} (mm/rad);module id", 100, \
+-300, 300,50,0,50);
+  TH2F*  halignderiv5mod = new TH2F("halignderiv5mod", "Alignment derivatives (rotate y);A_{i,4} (mm/rad);module id", 100, \
+-300, 300,50,0,50);
+  TH2F*  halignderiv6mod = new TH2F("halignderiv6mod", "Alignment derivatives (rotate z);A_{i,5} (mm/rad);module id", 100, \
+-300, 300,50,0,50);
+
+  TH1F*  hmeas = new TH1F("hmeas", "1D position (measured);1D position (mm);# of clusters", 100, -50, 50);
+  TH1F*  hextrap = new TH1F("hextrap", "1D position (extrap);1D position (mm);# of clusters", 100, -50, 50);
+  TH2F*  hmeasextrap = new TH2F("hextrap", "1D position (extrap);meas. 1D position (mm);extrap. 1D position (mm)", 100, -50, 50,100,-50,50);
+
+  TH1F*  hmeasres = new TH1F("hmeasres", "1D position residual;m_i-c_i (mm);# of clusters", 100, -2, 2);
+  TH2F*  hmeasresmod = new TH2F("hmeasresmod", "1D position residual;m_i-c_i (mm);# of clusters", 100, -2, 2,50,0,50);
+  
+  int events = 0, tracks=0;
+
+  int ndof =0;
+  float chi2 =0;
+  for(int i = 0; i<AlignTree->GetEntriesFast();i++){
+    cout << "event " << endl;
+    AlignTree->GetEntry(i);
+    int ndof = aevent->GetNdof();
+    float chi2 = aevent->GetChi2();
+
+    
+    hchi2->Fill(chi2);
+    cout << "chisq " << chi2 << endl;
+
+    hchi2ndof->Fill(chi2/ndof);
+    hchi2prob->Fill(TMath::Prob(chi2, ndof));
+    hndof->Fill(ndof);
+    hncross->Fill(aevent->GetMeasuredCovariance()->GetNrows()/2);
+
+    TMatrixD & A = *aevent->GetAlignmentDerivatives();
+    TMatrixD & B = *aevent->GetTrackDerivatives();
+    cout << "A00 " << A[0][0] <<endl;
+    for(int j = 0; j < aevent->GetMeasuredCovariance()->GetNrows(); j++){
+      double res = sqrt((*aevent->GetMeasuredCovariance())[j][j]);
+      int module = aevent->GetIndex()->At(j);
+      hres->Fill(res);
+      hresmodule->Fill(res,module);
+      hmodule->Fill(module);
+      
+      htrackderiv1->Fill(B[j][0]);
+      htrackderiv2->Fill(B[j][1]);
+      htrackderiv3->Fill(B[j][2]);
+      htrackderiv4->Fill(B[j][3]);
+      htrackderiv1mod->Fill(B[j][0],module);
+      htrackderiv2mod->Fill(B[j][1],module);
+      htrackderiv3mod->Fill(B[j][2],module);
+      htrackderiv4mod->Fill(B[j][3],module);
+      
+      halignderiv1->Fill(A[j][(j/2)*6+0]);
+      halignderiv2->Fill(A[j][(j/2)*6+1]);
+      halignderiv3->Fill(A[j][(j/2)*6+2]);
+      halignderiv4->Fill(A[j][(j/2)*6+3]);
+      halignderiv5->Fill(A[j][(j/2)*6+4]);
+      halignderiv6->Fill(A[j][(j/2)*6+5]);
+      
+      halignderiv1mod->Fill(A[j][(j/2)*6+0],module);
+      halignderiv2mod->Fill(A[j][(j/2)*6+1],module);
+      halignderiv3mod->Fill(A[j][(j/2)*6+2],module);
+      halignderiv4mod->Fill(A[j][(j/2)*6+3],module);
+      halignderiv5mod->Fill(A[j][(j/2)*6+4],module);
+      halignderiv6mod->Fill(A[j][(j/2)*6+5],module);
+      hmeas->Fill((*aevent->GetMeasurements())(j));
+      hextrap->Fill((*aevent->GetTrackPrediction())(j));
+      hmeasextrap->Fill((*aevent->GetMeasurements())(j),(*aevent->GetTrackPrediction())(j));
+      hmeasres->Fill((*aevent->GetMeasurements())(j)-(*aevent->GetTrackPrediction())(j));
+      hmeasresmod->Fill((*aevent->GetMeasurements())(j)-(*aevent->GetTrackPrediction())(j),module);
+    }
+  }
+  
+  //this is specific to the CVT
+  double R = 150;
+  int Nbins = 200;
+  TH2F*  hmodulexy =   new TH2F("hresmodulexy", "modules xy;x (mm);y (mm)", Nbins,-R,R,Nbins,-R,R);
+  for(int m = 0; m<42; m++){
+    
+    double n = hmodule->GetBinContent(m+1);
+    double pi = TMath::Pi();
+    double phim =  m<10 ? 2*pi*m/10 : (m<24 ? 2*pi*(m-10)/14 : 2*pi*(m-24)/18);
+    double dphim = m<10 ? pi/10 : (m<24 ? pi/14 : pi/18);
+    double rm = m<10 ? 65 : (m<24 ? 93 : 120);
+    phim -= pi/2;
+    while(phim < -pi)
+      phim += 2*pi;
+    while(phim > pi)
+      phim -= 2*pi;
+    for(int i = 0; i<hmodulexy->GetNbinsX(); i++){
+      double x = -R +2*i*R/Nbins;
+      for(int j = 0; j<hmodulexy->GetNbinsY(); j++){
+	double y = -R +2*j*R/Nbins;
+	double phi = TMath::ATan2(y,x);
+	double rc = x*cos(phim)+y*sin(phim);
+	if(rc>rm && rc<rm+5 && abs(phi-phim)<dphim){
+	  hmodulexy->SetBinContent(i,j,n);
+	}
+      }
+    }
+  }
+  
+  
+  if(!(plotsDir==TString())){
+    TCanvas* c = new TCanvas("canvas","canvas",800,600);
+    hchi2->Draw();c->SaveAs(plotsDir+"/chi2.pdf");
+    hchi2ndof->Draw();c->SaveAs(plotsDir+"/chi2ndof.pdf");
+    hchi2prob->Draw();c->SaveAs(plotsDir+"/chi2prob.pdf");
+    hndof->Draw();c->SaveAs(plotsDir+"/ndof.pdf");
+    hncross->Draw();c->SaveAs(plotsDir+"/ncross.pdf");
+    hres->Draw();c->SaveAs(plotsDir+"/resolution.pdf");
+    hresmodule->Draw("COLZ");c->SaveAs(plotsDir+"/res_vs_module.pdf");
+    
+    hmodule->Draw();TLine* l= new TLine();
+    l->SetLineColor(kRed);
+    l->DrawLine(10,0,10,hmodule->GetMaximum());
+    l->DrawLine(24,0,24,hmodule->GetMaximum());
+    l->DrawLine(42,0,42,hmodule->GetMaximum());
+    TText * t = new TText();
+    t->SetTextColor(kRed);
+    t->DrawText(3,hmodule->GetMaximum()/10,"R1");
+    t->DrawText(15,hmodule->GetMaximum()/10,"R2");
+    t->DrawText(31,hmodule->GetMaximum()/10,"R3");
+    c->SaveAs(plotsDir+"/module.pdf");
+    
+    htrackderiv1->Draw();c->SaveAs(plotsDir+"/B1.pdf");
+    htrackderiv2->Draw();c->SaveAs(plotsDir+"/B2.pdf");
+    htrackderiv3->Draw();c->SaveAs(plotsDir+"/B3.pdf");
+    htrackderiv4->Draw();c->SaveAs(plotsDir+"/B4.pdf");
+    htrackderiv1mod->Draw("COLZ");c->SaveAs(plotsDir+"/B1mod.pdf");
+    htrackderiv2mod->Draw("COLZ");c->SaveAs(plotsDir+"/B2mod.pdf");
+    htrackderiv3mod->Draw("COLZ");c->SaveAs(plotsDir+"/B3mod.pdf");
+    htrackderiv4mod->Draw("COLZ");c->SaveAs(plotsDir+"/B4mod.pdf");
+    
+    halignderiv1->Draw();c->SaveAs(plotsDir+"/A1.pdf");
+    halignderiv2->Draw();c->SaveAs(plotsDir+"/A2.pdf");
+    halignderiv3->Draw();c->SaveAs(plotsDir+"/A3.pdf");
+    halignderiv4->Draw();c->SaveAs(plotsDir+"/A4.pdf");
+    halignderiv5->Draw();c->SaveAs(plotsDir+"/A5.pdf");
+    halignderiv6->Draw();c->SaveAs(plotsDir+"/A6.pdf");
+    halignderiv1mod->Draw("COLZ");c->SaveAs(plotsDir+"/A1mod.pdf");
+    halignderiv2mod->Draw("COLZ");c->SaveAs(plotsDir+"/A2mod.pdf");
+    halignderiv3mod->Draw("COLZ");c->SaveAs(plotsDir+"/A3mod.pdf");
+    halignderiv4mod->Draw("COLZ");c->SaveAs(plotsDir+"/A4mod.pdf");
+    halignderiv5mod->Draw("COLZ");c->SaveAs(plotsDir+"/A5mod.pdf");
+    halignderiv6mod->Draw("COLZ");c->SaveAs(plotsDir+"/A6mod.pdf");
+    
+    hmodulexy->Draw("COLZ");c->SaveAs(plotsDir+"/modulexy.pdf");
+    
+    hmeas->SetTitle("1D hit positions");
+    hmeas->Draw();hextrap->SetLineColor(kRed);hextrap->Draw("SAME");
+    TLegend *legend = new TLegend();
+    legend->AddEntry(hmeas, "measured");
+    legend->AddEntry(hextrap, "track extrap");
+    legend->Draw();
+    c->SaveAs(plotsDir+"/meas_extrap.pdf");
+    
+    hmeasextrap->Draw("COLZ");l->DrawLine(-50,-50,50,50);c->SaveAs(plotsDir+"/meas_vs_extrap.pdf");
+    hmeasres->Draw();c->SaveAs(plotsDir+"/measres.pdf");
+    hmeasresmod->Draw("COLZ");c->SaveAs(plotsDir+"/measresmod.pdf");
+  }
+  
+  
+   auto finish = std::chrono::high_resolution_clock::now();
+   std::chrono::duration<double> elapsed = finish - start;
+   std::cout << "Elapsed time: " << elapsed.count()<< "s, events = "<<events<< "\n";
+  
+}
