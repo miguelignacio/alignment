@@ -112,7 +112,7 @@ int main(int argc, char * argv[]) {
   //ignore this just getting file name!
   TString inputFile;
   TString outputFile;
-  TString plotsDir;
+  
   
   vector<TString> inputFiles;
   for(Int_t i=1;i<argc;i++){
@@ -122,9 +122,7 @@ int main(int argc, char * argv[]) {
       inputFiles.push_back(inputFile);
     } else if (opt.Contains("--out=")){
       outputFile = opt(6,opt.Sizeof());
-    } if (opt.Contains("--plotsdir=")){
-      plotsDir = opt(11,opt.Sizeof());
-    }
+    } 
   }
   //if there is no input file
   if(inputFile==TString())  {
@@ -135,17 +133,17 @@ int main(int argc, char * argv[]) {
   
   TFile * out = TFile::Open(outputFile, "RECREATE");
   
-  // 42 SVT modules
-  // TODO remove hardcode
-  AlignInfo* ai = new AlignInfo(42,6);
-
-  ai->Write();
+  
   AlignEvent *aevent = new AlignEvent();
   TTree *AlignTree = new TTree("AlignTree","Alignment data", 0);
   AlignTree->Branch("AlignEvent", & aevent, 64000, 0);
   // auto save every MB
   AlignTree->SetAutoSave(1000000);
 
+
+  // 42 SVT modules                                                                                                          
+  // TODO remove hardcode                                                                                                    
+  AlignInfo* ai = NULL;
   
   int events = 0, tracks=0;
    for(Int_t filenum=0;filenum<inputFiles.size();filenum++){
@@ -169,16 +167,26 @@ int main(int argc, char * argv[]) {
      while(r.next()){
        events++;
        r.read(event);
-       event.getStructure(bank_A);
+       event.getStructure(bank_misc);
+       if(bank_misc.getRows() == 0)
+	 continue;
        event.getStructure(bank_B);
        event.getStructure(bank_V);
        event.getStructure(bank_m);
        event.getStructure(bank_c);
        event.getStructure(bank_I);
-       event.getStructure(bank_misc);
+       event.getStructure(bank_A);
        
        for(int i = 0; i<bank_A.getRows(); i++){
-	 
+
+	 // 42 SVT modules                                                                                                          
+  // TODO remove hardcode                                                                                                    
+	 if(ai==NULL){
+	   ai = new AlignInfo(bank_misc.getShort(bank_misc.getSchema().getEntryOrder("nalignables"),0),
+			      bank_misc.getShort(bank_misc.getSchema().getEntryOrder("nparameters"),0));
+	   ai->Write();
+	   cout << "wrote align info" << endl;
+	 }
 	 //cout << bank_I.getFloat(2,0) << endl;
 	 getFromBank(aevent->GetAlignmentDerivatives(),bank_A, i);
 	 getFromBank(aevent->GetTrackDerivatives(),bank_B, i);
@@ -186,7 +194,7 @@ int main(int argc, char * argv[]) {
          getFromBank(aevent->GetTrackPrediction(),bank_c, i);
          getFromBank(aevent->GetMeasuredCovariance(),bank_V, i);
          getFromBank(aevent->GetIndex(),bank_I, i);
-	 cout << "A00" << (*aevent->GetAlignmentDerivatives())(0,0) << endl;
+	 
 	 int ndof = bank_misc.getShort(bank_misc.getSchema().getEntryOrder("ndof"),i);
 	 float chi2 = bank_misc.getFloat(bank_misc.getSchema().getEntryOrder("chi2"),i); 
 	 aevent->SetRun(bank_misc.getInt(bank_misc.getSchema().getEntryOrder("run"),i));
