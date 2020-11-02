@@ -18,7 +18,7 @@
 #include <TCanvas.h>
 #include <TBenchmark.h>
 #include <TLegend.h>
-#include "../event/AlignEvent.h"
+#include "../../event/AlignEvent.h"
 
 
 #include <iostream>

@@ -19,7 +19,7 @@ ROOTLIBS     := $(shell root-config --libs)
 ROOTGLIBS    := $(shell root-config --glibs)
 #ROOTGLIBS   += -lX3d
 
-EXTLIBDIR =  lib/*.a -L../event ../event/*.so
+EXTLIBDIR =  lib/*.a -L../../event ../../event/*.so
 
 ######################################################################
 # You should not modify the lines below here
