@@ -106,13 +106,14 @@ int main(int argc, char * argv[]) {
   
   int last = 0;
   TH1* h = (TH1*)inputFile->Get(Form("hAliPar2"));
-  int end = h->GetMaximumBin();
+  int end = (int)h->GetXaxis()->GetXmax();
   for(int j=end; j>=0;j--) {
     if(h->GetBinContent(j)!=0){
       last=j;
       break;
     }
   }
+  cout << "last event is " << last << endl;
   TH1* hparams = new TH1F("params","params",200, 0, 200);
   double params[168];
   double dparams[168];
@@ -120,7 +121,7 @@ int main(int argc, char * argv[]) {
   TMatrixTSym<double> * C = (TMatrixTSym<double>*)inputFile->Get("CovarianceMatrix");
   //C.Print();
   for(int i = 0; i< 168;i++){
-    h=(TH1*)inputFile->Get(Form("hAliPar%d",i));
+    h=(TH1F*)inputFile->Get(Form("hAliPar%d",i));
     double n = h->GetBinContent(last);
     double dn = sqrt((*C)(i,i));
     cout << i <<" " << n<< " +- " << dn <<endl;
@@ -135,8 +136,8 @@ int main(int argc, char * argv[]) {
   TH1* hparamsx = new TH1F("paramsx","paramsx",100, 0, 100);
   TH1* hparamsy = new TH1F("paramsy","paramsy",100, 0, 100);
   for(int i = 0; i< 84;i++){
-    hparamsx->SetBinContent(i+1,params[2*i]);
-    hparamsx->SetBinError(i+1,dparams[2*i]);
+    hparamsx->SetBinContent(i+1+8*(i>42),params[2*i]);
+    hparamsx->SetBinError(i+1+8*(i>42),dparams[2*i]);
 
     hparamsy->SetBinContent(i+1+8*(i>42),params[2*i+1]);
     hparamsy->SetBinError(i+1+8*(i>42),dparams[2*i+1]);
@@ -159,6 +160,33 @@ int main(int argc, char * argv[]) {
   }
   allVals->Draw();
   c->SaveAs(plotsDir+"/allVals.pdf");
+
+  TH1F* diagCovs = new TH1F("diagonal cov elements", "sqrt(Cii)",50,-0.1,0.1);
+  for(int i = 0; i<168;i++){
+    diagCovs->Fill(dparams[i]);
+  }
+  diagCovs->Draw();
+  c->SaveAs(plotsDir+"/diagonals.pdf");
+
+  TH1F* offDiagCovs = new TH1F("off-diagonal cov elements", "Cij",50,-0.003,0.003);
+  for(int i = 0; i<168;i++){
+    for(int j = 0; j<i; j++){
+      offDiagCovs->Fill((*C)(i,j));
+    }
+  }
+  offDiagCovs->Draw();
+  c->SaveAs(plotsDir+"/offDiagonals.pdf");
+
+  TH1F* offDiagCovsNorm = new TH1F("off-diagonal cov elements normalized", "Cij/sqrt(Cii*Cjj)",50,-1,1);
+  for(int i = 0; i<168;i++){
+    for(int j = 0; j<i; j++){
+      offDiagCovsNorm->Fill((*C)(i,j)/sqrt((*C)(i,i)*(*C)(j,j)));
+    }
+  }
+  offDiagCovsNorm->Draw();
+  c->SaveAs(plotsDir+"/offDiagonalsNormed.pdf");
+  
+  
   double x[84];
   double y[84];
   double dx[84];
@@ -174,5 +202,7 @@ int main(int argc, char * argv[]) {
   g->Draw("AP");
   
   c->SaveAs(plotsDir+"/xvsy.pdf");
+
+
 
 }
