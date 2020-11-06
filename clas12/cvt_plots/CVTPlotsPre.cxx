@@ -320,10 +320,10 @@ int main(int argc, char * argv[]) {
     htrackderiv3mod->Draw("COLZ1");c->SaveAs(plotsDir+"/B3mod.pdf");
     htrackderiv4mod->Draw("COLZ1");c->SaveAs(plotsDir+"/B4mod.pdf");
     gStyle->SetPadRightMargin(.2);
-    createPlotXY(htrackderiv1mod,"B1","B1 (dimensionless)")->Draw("COLZ1");c->SaveAs(plotsDir+"/B1xy.pdf");
-    createPlotXY(htrackderiv2mod,"B2","B2 (dimensionless)")->Draw("COLZ1");c->SaveAs(plotsDir+"/B2xy.pdf");
-    createPlotXY(htrackderiv3mod,"B3","B3 (mm)")->Draw("COLZ1");c->SaveAs(plotsDir+"/B3xy.pdf");
-    createPlotXY(htrackderiv4mod,"B4","B4 (mm)")->Draw("COLZ1");c->SaveAs(plotsDir+"/B4xy.pdf");
+    createPlotXY(htrackderiv1mod,"B1 (doca)","B1 (dimensionless)")->Draw("COLZ1");c->SaveAs(plotsDir+"/B1xy.pdf");
+    createPlotXY(htrackderiv2mod,"B2 (phi)","B2 (dimensionless)")->Draw("COLZ1");c->SaveAs(plotsDir+"/B2xy.pdf");
+    createPlotXY(htrackderiv3mod,"B3 (z)","B3 (mm)")->Draw("COLZ1");c->SaveAs(plotsDir+"/B3xy.pdf");
+    createPlotXY(htrackderiv4mod,"B4 (tandip)","B4 (mm)")->Draw("COLZ1");c->SaveAs(plotsDir+"/B4xy.pdf");
     gStyle->SetPadRightMargin(.10);
     halignderiv1->Draw();c->SaveAs(plotsDir+"/A1.pdf");
     halignderiv2->Draw();c->SaveAs(plotsDir+"/A2.pdf");
