@@ -4,16 +4,12 @@
 ######################################################################
 
 # CLHEP setup - where CLHEP is installed
-#CLHEP_VERSION = '2.4.1.3'
-#CLHEPSYS='/Users/spaul/CLHEP/install_dir'
+
+CLHEP_VERSION = '2.4.4.1'
+CLHEPSYS='/home/sebouh/CLHEP_install'
 
 # ROOT setup - where your ROOT is installed
-#ROOTSYS='/usr'
-#ROOTSYS='/Applications/root/build'
-import os;
-CLHEP_VERSION=os.environ['CLHEP_VERSION']
-CLHEP_DIR=os.environ['CLHEP_DIR']
-ROOTSYS=os.environ['ROOTSYS']
+ROOTSYS='/home/miguel/root'
 
 ######################################################################
 # end of user input - do not change below this line
@@ -34,8 +30,8 @@ env.MergeFlags('!' + ROOTSYS + '/bin/root-config --libs --glibs --cflags')
 env.MergeFlags('-lRGL')
 
 # setup CLHEP includes and libs
-env.MergeFlags('-I'+CLHEP_DIR+'/include'
-               + ' -L' +CLHEP_DIR+'/lib'
+env.MergeFlags('-I'+CLHEPSYS+'/include/'
+               + ' -L/usr/lib64'
                + ' -lCLHEP-Matrix-'+CLHEP_VERSION
                + ' -lCLHEP-Vector-'+CLHEP_VERSION)
 # setup local needs
