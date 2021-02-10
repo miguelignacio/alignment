@@ -117,12 +117,12 @@ int main(int argc, char * argv[]) {
   vector<TString> inputFiles;
   for(Int_t i=1;i<argc;i++){
     TString opt=argv[i];
-    if((opt.Contains("--in="))){
-      inputFile=opt(5,opt.Sizeof());
-      inputFiles.push_back(inputFile);
-    } else if (opt.Contains("--out=")){
+    if (opt.Contains("--out=")){
       outputFile = opt(6,opt.Sizeof());
-    } 
+    } else{
+      inputFile = opt.ReplaceAll("--in=","");
+      inputFiles.push_back(opt);
+    }
   }
   //if there is no input file
   if(inputFile==TString())  {
@@ -146,24 +146,23 @@ int main(int argc, char * argv[]) {
   AlignInfo* ai = NULL;
   
   int events = 0, tracks=0;
-   for(Int_t filenum=0;filenum<inputFiles.size();filenum++){
-     //create the event reader
-     inputFile = inputFiles[filenum];
-     cout<<"Analysing hipo file "<<inputFile<<endl;
-     hipo::reader r;
-     r.open(inputFile);
-     hipo::dictionary factory;
-     r.readDictionary(factory);
-     hipo::bank bank_A(factory.getSchema("Align::A"));
-     hipo::bank bank_B(factory.getSchema("Align::B"));
-     hipo::bank bank_V(factory.getSchema("Align::V"));
-     hipo::bank bank_m(factory.getSchema("Align::m"));
-     hipo::bank bank_c(factory.getSchema("Align::c"));
-     hipo::bank bank_I(factory.getSchema("Align::I"));
-     hipo::bank bank_misc(factory.getSchema("Align::misc"));
-     
-     hipo::event event;
-
+  for(Int_t filenum=0;filenum<inputFiles.size();filenum++){
+    //create the event reader
+    inputFile = inputFiles[filenum];
+    cout<<"Analysing hipo file "<<inputFile<<endl;
+    hipo::reader r;
+    r.open(inputFile);
+    hipo::dictionary factory;
+    r.readDictionary(factory);
+    hipo::bank bank_A(factory.getSchema("Align::A"));
+    hipo::bank bank_B(factory.getSchema("Align::B"));
+    hipo::bank bank_V(factory.getSchema("Align::V"));
+    hipo::bank bank_m(factory.getSchema("Align::m"));
+    hipo::bank bank_c(factory.getSchema("Align::c"));
+    hipo::bank bank_I(factory.getSchema("Align::I"));
+    hipo::bank bank_misc(factory.getSchema("Align::misc"));
+    
+    hipo::event event;
      while(r.next()){
        events++;
        r.read(event);
@@ -176,7 +175,6 @@ int main(int argc, char * argv[]) {
        event.getStructure(bank_c);
        event.getStructure(bank_I);
        event.getStructure(bank_A);
-       
        for(int i = 0; i<bank_A.getRows(); i++){
 
 	 // 42 SVT modules                                                                                                          
@@ -208,8 +206,8 @@ int main(int argc, char * argv[]) {
        }
      }
      
-    
-   }
+     //r.close();
+  }
 
    AlignTree->Write();   
    
