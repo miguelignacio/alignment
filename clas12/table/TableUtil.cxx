@@ -228,7 +228,7 @@ int main(int argc, char * argv[]) {
     
     
     //three commented lines
-    for(int i = 0; i<3; i++){
+    for(int i = 0; i<1; i++){
       string line;
       std::getline(fin, line);
       fout << line << endl;
@@ -237,7 +237,7 @@ int main(int argc, char * argv[]) {
     
     int sector, layer, component;
     
-    for(int i = 0; i<102; i++){
+    for(int i = 0; i<84; i++){
       
       fin >> sector >> layer >> component >> tx >> ty >> tz >> rx >> ry >> rz >> ra;
       cout << "old tx = " << tx << ";  delta = " << Tx[i] << endl;
@@ -248,7 +248,9 @@ int main(int argc, char * argv[]) {
         j += 10;
       if(layer > 4)
         j += 14;
-      fout << sector << "\t" << layer << "\t" << component << "\t" << tx-Tx[j] << "\t" << ty-Ty[j] << "\t" << tz-Tz[j] << "\t" << rx-Rx[j] << "\t" << ry-Ry[j] << "\t" << rz-Rz[j] << "\t" << ra-Ra[j] << "\n";
+      
+      int sign = -1;
+      fout << sector << "\t" << layer << "\t" << component << "\t" << tx+sign*Tx[j] << "\t" << ty+sign*Ty[j] << "\t" << tz+sign*Tz[j] << "\t" << rx+sign*Rx[j] << "\t" << ry+sign*Ry[j] << "\t" << rz+sign*Rz[j] << "\t" << ra+sign*Ra[j] << "\n";
     }
     fin.close();
     fout.close();
