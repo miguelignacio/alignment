@@ -36,6 +36,9 @@
 
 using namespace std;
 
+#define SVT 0
+#define BMT 1
+
 int main(int argc, char * argv[]) {
   // Record start time
   auto start = std::chrono::high_resolution_clock::now();
@@ -47,14 +50,17 @@ int main(int argc, char * argv[]) {
   TString config;
   
   vector<TString> inputFiles;
-
   
+  //take the average of the top and bottom modules
   bool mergeTB = 0;
+  //only move the modules transversely
+  bool fixNormal = 0;
+  int detector = SVT;
   for(Int_t i=1;i<argc;i++){
     TString opt=argv[i];
     if((opt.Contains("--in="))){
-      inputFileName=opt(5,opt.Sizeof());  
-    } 
+      inputFileName=opt(5,opt.Sizeof());
+    }
     
     if (opt.Contains("--old=")){
       oldFile = opt(6,opt.Sizeof());
@@ -63,13 +69,20 @@ int main(int argc, char * argv[]) {
     if (opt.Contains("--new=")){
       newFile = opt(6,opt.Sizeof());
     }
-
+    
     if (opt.Contains("--config=")){
       config = opt(9,opt.Sizeof());
     }
-
+    
     if (opt.Contains("--mergeTB")){
       mergeTB=1;
+    }
+    
+    if (opt.Contains("--fixNormal")){
+      fixNormal=1;
+    }
+    if (opt.Contains("--detector=BMT")){
+      detector = BMT;
     }
   }
   //if there is no input file
@@ -78,7 +91,7 @@ int main(int argc, char * argv[]) {
     exit(0);
   }
   /////////////////////////////////////
-
+  
   //parse the config string
   
   int orderTx = -1;
@@ -87,7 +100,7 @@ int main(int argc, char * argv[]) {
   int orderRx = -1;
   int orderRy = -1;
   int orderRz = -1;
-
+  
   int nparams = config.Sizeof()/2;
   for(int i = 0; i<config.Sizeof()/2; i++){
     if (config(2*i,2*i+2) == "Tx")
@@ -122,15 +135,16 @@ int main(int argc, char * argv[]) {
     }
   }
   cout << "last event is " << last << endl;
-
+  
   //auto C = *(TMatrixTSym*)inputFile->Get("CovarianceMatrix");
   TMatrixTSym<double> * C = (TMatrixTSym<double>*)inputFile->Get("CovarianceMatrix");
   int N = C->GetNrows();
-
+  cout << N << " rows; " << nparams << " parameters" <<  endl;
+  int nalignables = N/nparams;
   //C.Print();
   TH1* hparams = new TH1F("params","params",N, 0, N);
   double params[N];
-  double dparams[N];  
+  double dparams[N];
   for(int i = 0; i< N;i++){
     h=(TH1F*)inputFile->Get(Form("hAliPar%d",i));
     double n = h->GetBinContent(last);
@@ -142,14 +156,15 @@ int main(int argc, char * argv[]) {
     dparams[i] = dn;
   }
   
-  double Tx[84];
-  double Ty[84];
-  double Tz[84];
-  double Rx[84];
-  double Ry[84];
-  double Rz[84];
-  double Ra[84];
-  for(int i = 0; i<84; i++){
+  
+  double Tx[nalignables];
+  double Ty[nalignables];
+  double Tz[nalignables];
+  double Rx[nalignables];
+  double Ry[nalignables];
+  double Rz[nalignables];
+  double Ra[nalignables];
+  for(int i = 0; i<nalignables; i++){
     if(orderTx >= 0)
       Tx[i] = params[nparams*i+orderTx];
     else
@@ -183,39 +198,88 @@ int main(int argc, char * argv[]) {
   TString s;
   
   double tx, ty, tz, rx, ry, rz, ra;
-
-  if(mergeTB){
-    for(int i = 0; i<42; i++){
-      double * a[] = {Tx,Ty,Tz,Rx,Ry,Rz,Ra};
-      for(int j = 0; j<7;j++){
-	a[j][i]= (a[j][i]+a[j][i+42])/2;
-	a[j][i+42] = a[j][i];
+  
+  if(detector == SVT){
+    if(fixNormal){
+      for(int i=0; i<84; i++){
+        double phi;
+        if(i%42<10)
+          phi=(i%42)*TMath::Pi()*2/10;
+        if(i%42<24)
+          phi=(i%42-10)*TMath::Pi()*2/14;
+        else
+          phi=(i%42-24)*TMath::Pi()*2/18;
+        phi = TMath::Pi()/2-phi;
+        double t = -sin(phi)*Tx[i]+cos(phi)*Ty[i];
+        Tx[i] = -sin(phi)*t;
+        Ty[i] = cos(phi)*t;
       }
     }
-  }
-
-  
-  //three commented lines
-  for(int i = 0; i<3; i++){
-    string line;
-    std::getline(fin, line);
-    fout << line << endl;
-
-  }
-  
-  int sector, layer, component;
-  for(int i = 0; i<84; i++){
-    fin >> sector >> layer >> component >> tx >> ty >> tz >> rx >> ry >> rz >> ra ;
-    cout << "old tx = " << tx << ";  delta = " << Tx[i] << endl;
-    int j = (layer % 2 ? 0 : 42) + sector-1;
-    if(layer > 2)
-      j += 10;
-    if(layer > 4)
-      j += 14;
-    fout << sector << "\t" << layer << "\t" << component << "\t" << tx-Tx[j] << "\t" << ty-Ty[j] << "\t" << tz-Tz[j] << "\t" << rx-Rx[j] << "\t" << ry-Ry[j] << "\t" << rz-Rz[j] << "\t" << ra-Ra[j] << "\n";
+    
+    if(mergeTB){
+      for(int i = 0; i<42; i++){
+        double * a[] = {Tx,Ty,Tz,Rx,Ry,Rz,Ra};
+        for(int j = 0; j<7;j++){
+          a[j][i]= (a[j][i]+a[j][i+42])/2;
+          a[j][i+42] = a[j][i];
+        }
+      }
+    }
+    
+    
+    //three commented lines
+    for(int i = 0; i<3; i++){
+      string line;
+      std::getline(fin, line);
+      fout << line << endl;
+      
+    }
+    
+    int sector, layer, component;
+    
+    for(int i = 0; i<102; i++){
+      
+      fin >> sector >> layer >> component >> tx >> ty >> tz >> rx >> ry >> rz >> ra;
+      cout << "old tx = " << tx << ";  delta = " << Tx[i] << endl;
+      int j = (layer % 2 ? 0 : 42) + sector-1;
+      
+      
+      if(layer > 2)
+        j += 10;
+      if(layer > 4)
+        j += 14;
+      fout << sector << "\t" << layer << "\t" << component << "\t" << tx-Tx[j] << "\t" << ty-Ty[j] << "\t" << tz-Tz[j] << "\t" << rx-Rx[j] << "\t" << ry-Ry[j] << "\t" << rz-Rz[j] << "\t" << ra-Ra[j] << "\n";
+    }
+    fin.close();
+    fout.close();
+    cout << "wrote to " << newFile;
+  } else if (detector==BMT){
+    for(int i = 0; i<1; i++){
+      string line;
+      std::getline(fin, line);
+      fout << line << endl;
+      
+    }
+    cout << "BMT" << endl;
+    int sector, layer, component;
+    for(int i = 0; i<18; i++){
+      fin >> sector >> layer >> component >> tx >> ty >> tz >> rx >> ry >> rz ;
+      cout << i << " " << sector << " " << layer << " " << component <<" " << tz << "   ";
+      cout << "old tx = " << tx << ";  delta = " << Tx[i] << endl;
+      int j = 84+(layer-1)*3 + sector-1;
+      
+      if(layer == 1 || layer == 4 || layer == 6){ //don't change the C layers yet
+        Tx[j] = 0;
+        Ty[j] = 0;
+      }
+      int sign = -1;
+      fout << sector << "\t" << layer << "\t" << component << "\t" << tx+sign*Tx[j] << "\t" << ty+sign*Ty[j] << "\t" << tz+sign*Tz[j] << "\
+      \t" << rx+sign*Rx[j] << "\t" << ry+sign*Ry[j] << "\t" << rz+sign*Rz[j] << "\n";
+      
+    }
+    fin.close();
+    fout.close();
+    cout << "wrote to " << newFile;
     
   }
-  fin.close();
-  fout.close();
-  cout << "wrote to " << newFile;
 }
