@@ -103,19 +103,21 @@ int main(int argc, char * argv[]) {
   
   int nparams = config.Sizeof()/2;
   for(int i = 0; i<config.Sizeof()/2; i++){
-    if (config(2*i,2*i+2) == "Tx")
+    TString varname =config(2*i,2);
+    if (varname == "Tx")
       orderTx = i;
-    else if (config(2*i,2*i+2) == "Ty")
+    else if (varname == "Ty")
       orderTy =	i;
-    else if (config(2*i,2*i+2) == "Tz")
+    else if (varname == "Tz")
       orderTz = i;
-    else if (config(2*i,2*i+2) == "Rx")
+    else if (varname == "Rx")
       orderRx = i;
-    else if (config(2*i,2*i+2) == "Ry")
+    else if (varname == "Ry")
       orderRy = i;
-    else if (config(2*i,2*i+2) == "Rz")
+    else if (varname == "Rz")
       orderRz = i;
     else{
+      cout << "invalid variable in config string: "<< varname << endl;
       cout << "invalid config string: "  << config << ".  Example:  TxTyRz -> translations in x, translations in y, rotation in z"<<  endl;
       return(0);
     }
@@ -227,13 +229,6 @@ int main(int argc, char * argv[]) {
     }
     
     
-    //three commented lines
-    for(int i = 0; i<1; i++){
-      string line;
-      std::getline(fin, line);
-      fout << line << endl;
-      
-    }
     
     int sector, layer, component;
     
@@ -249,19 +244,31 @@ int main(int argc, char * argv[]) {
       if(layer > 4)
         j += 14;
       
+      //double ux =Rx[j]
+      
       int sign = -1;
-      fout << sector << "\t" << layer << "\t" << component << "\t" << tx+sign*Tx[j] << "\t" << ty+sign*Ty[j] << "\t" << tz+sign*Tz[j] << "\t" << rx+sign*Rx[j] << "\t" << ry+sign*Ry[j] << "\t" << rz+sign*Rz[j] << "\t" << ra+sign*Ra[j] << "\n";
+      double rprevx = ra*rx;
+      double rprevy = ra*ry;
+      double rprevz = ra*rz;
+      
+      double rnewx = rprevx+sign*Rx[j];
+      double rnewy = rprevy+sign*Ry[j];
+      double rnewz = rprevz+sign*Rz[j];
+      
+      double rnewa = sqrt(rnewx*rnewx+rnewy*rnewy+rnewz*rnewz);
+      if(rnewa>0)
+      {
+        rnewx/=rnewa;
+        rnewy/=rnewa;
+        rnewz/=rnewa;
+      }
+      
+      fout << sector << "\t" << layer << "\t" << component << "\t" << tx+sign*Tx[j] << "\t" << ty+sign*Ty[j] << "\t" << tz+sign*Tz[j] << "\t" << rnewx << "\t" << rnewy << "\t" << rnewz << "\t" << rnewa << "\n";
     }
     fin.close();
     fout.close();
     cout << "wrote to " << newFile;
   } else if (detector==BMT){
-    for(int i = 0; i<1; i++){
-      string line;
-      std::getline(fin, line);
-      fout << line << endl;
-      
-    }
     cout << "BMT" << endl;
     int sector, layer, component;
     for(int i = 0; i<18; i++){
@@ -273,6 +280,9 @@ int main(int argc, char * argv[]) {
       if(layer == 1 || layer == 4 || layer == 6){ //don't change the C layers yet
         Tx[j] = 0;
         Ty[j] = 0;
+        Rx[j] = 0;
+        Ry[j] = 0;
+        Rz[j] = 0;
       }
       int sign = -1;
       fout << sector << "\t" << layer << "\t" << component << "\t" << tx+sign*Tx[j] << "\t" << ty+sign*Ty[j] << "\t" << tz+sign*Tz[j] << "\
