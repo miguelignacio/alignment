@@ -193,7 +193,10 @@ int main(int argc, char * argv[]) {
   gStyle->SetPadBottomMargin(.13);
 
   TH1F*  hchi2 = new TH1F("hchi2", "track #chi^{2};track #chi^{2};# of events", 100, 0, 300);
-  TH1F*  hchi2ndof = new TH1F("hchi2ndof", "track #chi^{2}/ndof;track #chi^{2}/n_{dof};# of events", 100, 0, 70);
+  TH1F*  hchi2ndof = new TH1F("hchi2ndof", "track #chi^{2}/ndof;track #chi^{2}/n_{dof};# of events", 100, 0, 20);
+  TH1F*  hchi2ndof_svt = new TH1F("hchi2_svt", "track #chi^{2}/dof svt;track #chi^{2}/dof;# of events", 100, 0, 20);
+  TH1F*  hchi2ndof_bmtz = new TH1F("hchi2_bmtz", "track #chi^{2}/dof bmtz;track #chi^{2}/dof;# of events", 100, 0, 20);
+  TH1F*  hchi2ndof_bmtc = new TH1F("hchi2_bmtc", "track #chi^{2}/dof bmtc;track #chi^{2}/dof;# of events", 100, 0, 20);
   TH1F*  hchi2prob = new TH1F("hchi2prob", "track #chi^{2} probability;p(#chi^2,n_{dof};# of events", 100, 0, 1);
   TH1F*  hndof = new TH1F("hndof", "degrees of freedom;n_{dof};# of events", 20, 0, 20);
   TH1F*  hncross = new TH1F("hncross", "number of crosses used;# of crosses;# of events", 20, 0, 20);
@@ -278,7 +281,13 @@ int main(int argc, char * argv[]) {
     cout << endl<< endl;
     */
     TMatrixD & B = *aevent->GetTrackDerivatives();
-
+    double ndof_svt = 0;
+    double ndof_bmtz = 0;
+    double ndof_bmtc = 0;
+    double chi2_svt = 0;
+    double chi2_bmtz = 0;
+    double chi2_bmtc = 0;
+    
     for(int j = 0; j < aevent->GetMeasuredCovariance()->GetNrows(); j++){
       double res = sqrt((*aevent->GetMeasuredCovariance())[j][j]);
       double module = aevent->GetIndex()->At(j);
@@ -327,12 +336,23 @@ int main(int argc, char * argv[]) {
       hmeas->Fill((*aevent->GetMeasurements())(j));
       hextrap->Fill((*aevent->GetTrackPrediction())(j));
       hmeasextrap->Fill((*aevent->GetMeasurements())(j),(*aevent->GetTrackPrediction())(j));
-      hresidual->Fill((*aevent->GetMeasurements())(j)-(*aevent->GetTrackPrediction())(j));
+      double resid = (*aevent->GetMeasurements())(j)-(*aevent->GetTrackPrediction())(j);
+      hresidual->Fill(resid);
       if(module >=84 && module < 102){
+        if (module <=86 || module>=93 && module<=95 || module>=99){
+          ndof_bmtc ++;
+          chi2_bmtc+=resid*resid/(*aevent->GetMeasuredCovariance())[j][j];
+        } else {
+          ndof_bmtz ++;
+          chi2_bmtz+=resid*resid/(*aevent->GetMeasuredCovariance())[j][j];
+          
+        }
         residuals_BMT[module-84]->Fill((*aevent->GetMeasurements())(j)-(*aevent->GetTrackPrediction())(j));
       } else if (module == 102){
         residuals_beamspot->Fill((*aevent->GetMeasurements())(j)-(*aevent->GetTrackPrediction())(j));
       } else {
+        ndof_svt ++;
+        chi2_svt += resid*resid/(*aevent->GetMeasuredCovariance())[j][j];
         hresidual_SVT->Fill((*aevent->GetMeasurements())(j)-(*aevent->GetTrackPrediction())(j));
       }
       hresidualmod->Fill((*aevent->GetMeasurements())(j)-(*aevent->GetTrackPrediction())(j),module);
@@ -340,6 +360,13 @@ int main(int argc, char * argv[]) {
       hresidualnormmod->Fill(((*aevent->GetMeasurements())(j)-(*aevent->GetTrackPrediction())(j))/res,module);
       
     }
+    //hchi2ndof_svt->Fill(chi2_svt/ndof_svt);
+    //hchi2ndof_bmtz->Fill(chi2_bmtz/ndof_bmtz);
+    //hchi2ndof_bmtc->Fill(chi2_bmtc/ndof_bmtc);
+    
+    hchi2ndof_svt->Fill(chi2_svt/ndof);
+    hchi2ndof_bmtz->Fill(chi2_bmtz/ndof);
+    hchi2ndof_bmtc->Fill(chi2_bmtc/ndof);
   }
   
   //this is specific to the CVT
@@ -378,6 +405,9 @@ int main(int argc, char * argv[]) {
     TCanvas* c = new TCanvas("canvas","canvas",800,600);
     hchi2->Draw();drawLabel(label);c->SaveAs(plotsDir+"/chi2.png");
     hchi2ndof->Draw();drawLabel(label);c->SaveAs(plotsDir+"/chi2ndof.png");
+    hchi2ndof_svt->Draw();drawLabel(label);c->SaveAs(plotsDir+"/chi2ndof_svt.png");
+    hchi2ndof_bmtz->Draw();drawLabel(label);c->SaveAs(plotsDir+"/chi2ndof_bmtz.png");
+    hchi2ndof_bmtc->Draw();drawLabel(label);c->SaveAs(plotsDir+"/chi2ndof_bmtc.png");
     hchi2prob->Draw();drawLabel(label);c->SaveAs(plotsDir+"/chi2prob.png");
     hndof->Draw();drawLabel(label);c->SaveAs(plotsDir+"/ndof.png");
     hncross->Draw();drawLabel(label);c->SaveAs(plotsDir+"/ncross.png");
