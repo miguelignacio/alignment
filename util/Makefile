@@ -15,8 +15,8 @@ ROOTGLIBS    := $(shell root-config --glibs)
 #ROOTGLIBS   += -lX3d
 
 # external includes / libraries
-#CLHEP_DIR = /Users/spaul/CLHEP/install_dir
-#CLHEP_VERSION = 2.4.1.3
+#CLHEP_DIR = /home/sebouh/CLHEP_install
+#CLHEP_VERSION = 2.4.4.1
 EXTINCDIR     = -I/usr/local/include/ -I$(CLHEP_DIR)/include
 EXTLIBS       = -L$(CLHEP_DIR)/lib -lCLHEP-Matrix-$(CLHEP_VERSION) -lCLHEP-Vector-$(CLHEP_VERSION)
 
