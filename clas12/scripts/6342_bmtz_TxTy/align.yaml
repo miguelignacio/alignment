@@ -25,21 +25,23 @@ configuration:
     CVT:
       cosmics: "false"
       svtOnly: "false"
-      variation: "bestsofar"
+      variation: "dev7"
       #minHitTimeBMT:  "50"
       #maxHitTimeBMT:  "380"
       #minHitTimeSVT:  "34"
       #maxHitTimeSVT:  "180"
       #excludeLayers: "7,8,9,10,11,12"
     ALIGN:
-      variation: "bestsofar"
+      variation: "dev7"
       svtOnly: "false"
       bmtOnly: "false"
       svtAlignTopBottomSeparately: "true"
       alignVariables: "Tx Ty"
-      maxDocaCut: "300"
+      maxDocaCut: "5"
       cosmics: "false"
-      maxResidual: "100"
+      maxResidualSVT: "5"
+      maxResidualBMTZ: "5"
+      maxResidualBMTC: "10"
       debug: "true"
 mime-types:
   - binary/data-hipo
