@@ -137,12 +137,24 @@ int main(int argc, char * argv[]) {
   AlignEvent *aevent = new AlignEvent();
   TTree *AlignTree = new TTree("AlignTree","Alignment data", 0);
   AlignTree->Branch("AlignEvent", & aevent, 64000, 0);
+  
+  //save the track parameters
+  float q0=0;
+  float q1=0;
+  float q2=0;
+  float q3=0;
+  
+  AlignTree->Branch("q0",&q0,"q0/F");
+  AlignTree->Branch("q1",&q1,"q1/F");
+  AlignTree->Branch("q2",&q2,"q2/F");
+  AlignTree->Branch("q3",&q3,"q3/F");
+  
   // auto save every MB
   AlignTree->SetAutoSave(1000000);
-
-
-  // 42 SVT modules                                                                                                          
-  // TODO remove hardcode                                                                                                    
+  
+  
+  // 42 SVT modules
+  // TODO remove hardcode
   AlignInfo* ai = NULL;
   
   int events = 0, tracks=0;
@@ -160,60 +172,72 @@ int main(int argc, char * argv[]) {
     hipo::bank bank_m(factory.getSchema("Align::m"));
     hipo::bank bank_c(factory.getSchema("Align::c"));
     hipo::bank bank_I(factory.getSchema("Align::I"));
+    hipo::bank bank_q(factory.getSchema("Align::q"));
     hipo::bank bank_misc(factory.getSchema("Align::misc"));
     
     hipo::event event;
-     while(r.next()){
-       events++;
-       r.read(event);
-       event.getStructure(bank_misc);
-       if(bank_misc.getRows() == 0)
-	 continue;
-       event.getStructure(bank_B);
-       event.getStructure(bank_V);
-       event.getStructure(bank_m);
-       event.getStructure(bank_c);
-       event.getStructure(bank_I);
-       event.getStructure(bank_A);
-       for(int i = 0; i<bank_A.getRows(); i++){
-
-	 // 42 SVT modules                                                                                                          
-  // TODO remove hardcode                                                                                                    
-	 if(ai==NULL){
-	   ai = new AlignInfo(bank_misc.getShort(bank_misc.getSchema().getEntryOrder("nalignables"),0),
-			      bank_misc.getShort(bank_misc.getSchema().getEntryOrder("nparameters"),0));
-	   ai->Write();
-	   cout << "wrote align info" << endl;
-	 }
-	 //cout << bank_I.getFloat(2,0) << endl;
-	 getFromBank(aevent->GetAlignmentDerivatives(),bank_A, i);
-	 getFromBank(aevent->GetTrackDerivatives(),bank_B, i);
-	 getFromBank(aevent->GetMeasurements(),bank_m, i);
-         getFromBank(aevent->GetTrackPrediction(),bank_c, i);
-         getFromBank(aevent->GetMeasuredCovariance(),bank_V, i);
-         getFromBank(aevent->GetIndex(),bank_I, i);
-	 
-	 int ndof = bank_misc.getShort(bank_misc.getSchema().getEntryOrder("ndof"),i);
-	 float chi2 = bank_misc.getFloat(bank_misc.getSchema().getEntryOrder("chi2"),i); 
-	 aevent->SetRun(bank_misc.getInt(bank_misc.getSchema().getEntryOrder("run"),i));
-	 aevent->SetEvent(bank_misc.getInt(bank_misc.getSchema().getEntryOrder("event"),i));
-	 aevent->SetChi2(bank_misc.getFloat(bank_misc.getSchema().getEntryOrder("chi2"),i));;
-	 aevent->SetNdof(bank_misc.getShort(bank_misc.getSchema().getEntryOrder("ndof"),i));
-	 aevent->SetTrackNumber(bank_misc.getInt(bank_misc.getSchema().getEntryOrder("track"),i));
-	 AlignTree->Fill();
-
-
-       }
-     }
-     
-     //r.close();
+    while(r.next()){
+      events++;
+      r.read(event);
+      event.getStructure(bank_misc);
+      if(bank_misc.getRows() == 0)
+        continue;
+      event.getStructure(bank_B);
+      event.getStructure(bank_V);
+      event.getStructure(bank_m);
+      event.getStructure(bank_c);
+      event.getStructure(bank_I);
+      event.getStructure(bank_A);
+      event.getStructure(bank_q);
+      for(int i = 0; i<bank_A.getRows(); i++){
+        
+        // 42 SVT modules
+        // TODO remove hardcode
+        if(ai==NULL){
+          ai = new AlignInfo(bank_misc.getShort(bank_misc.getSchema().getEntryOrder("nalignables"),0),
+                             bank_misc.getShort(bank_misc.getSchema().getEntryOrder("nparameters"),0));
+          ai->Write();
+          cout << "wrote align info" << endl;
+        }
+        //cout << bank_I.getFloat(2,0) << endl;
+        getFromBank(aevent->GetAlignmentDerivatives(),bank_A, i);
+        getFromBank(aevent->GetTrackDerivatives(),bank_B, i);
+        getFromBank(aevent->GetMeasurements(),bank_m, i);
+        getFromBank(aevent->GetTrackPrediction(),bank_c, i);
+        getFromBank(aevent->GetMeasuredCovariance(),bank_V, i);
+        getFromBank(aevent->GetIndex(),bank_I, i);
+        
+        int ndof = bank_misc.getShort(bank_misc.getSchema().getEntryOrder("ndof"),i);
+        float chi2 = bank_misc.getFloat(bank_misc.getSchema().getEntryOrder("chi2"),i);
+        aevent->SetRun(bank_misc.getInt(bank_misc.getSchema().getEntryOrder("run"),i));
+        aevent->SetEvent(bank_misc.getInt(bank_misc.getSchema().getEntryOrder("event"),i));
+        aevent->SetChi2(bank_misc.getFloat(bank_misc.getSchema().getEntryOrder("chi2"),i));;
+        aevent->SetNdof(bank_misc.getShort(bank_misc.getSchema().getEntryOrder("ndof"),i));
+        aevent->SetTrackNumber(bank_misc.getInt(bank_misc.getSchema().getEntryOrder("track"),i));
+        //TVectorD* q;
+        //getFromBank(q, bank_q,i);
+        //cout << "checkpoint1" <<endl;
+        cout << bank_q.getSchema().getEntryOrder("element_0_0") << " " << bank_q.getSchema().getEntryOrder("element_1_0") << " " << bank_q.getSchema().getEntryOrder("element_2_0") << " " << bank_q.getSchema().getEntryOrder("element_3_0") << endl;
+        q0 = bank_q.getFloat(bank_q.getSchema().getEntryOrder("element_0_0"),i);
+        q1 = bank_q.getFloat(bank_q.getSchema().getEntryOrder("element_1_0"),i);
+        q2 = bank_q.getFloat(bank_q.getSchema().getEntryOrder("element_2_0"),i);
+        q3 = bank_q.getFloat(bank_q.getSchema().getEntryOrder("element_3_0"),i);
+        cout << q0 << " " << q1 << " " << q2 << " " << q3 << endl;
+        //cout << "checkpoint2" <<endl;
+        AlignTree->Fill();
+        
+        
+      }
+    }
+    
+    //r.close();
   }
-
-   AlignTree->Write();   
-   
-   auto finish = std::chrono::high_resolution_clock::now();
-   std::chrono::duration<double> elapsed = finish - start;
-   std::cout << "Elapsed time: " << elapsed.count()<< "s, events = "<<events<< "\n";
-   out->Write();
-   out->Close();
+  
+  AlignTree->Write();
+  
+  auto finish = std::chrono::high_resolution_clock::now();
+  std::chrono::duration<double> elapsed = finish - start;
+  std::cout << "Elapsed time: " << elapsed.count()<< "s, events = "<<events<< "\n";
+  out->Write();
+  out->Close();
 }
