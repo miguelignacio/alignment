@@ -119,10 +119,10 @@ int main(int argc, char * argv[]) {
     TH1F* residuals_bmtz = new TH1F ("res_bmtz"+suffix, "BMTZ residuals;residual [mm];# of clusters", 100, -5, 5);
     TH1F* residuals_bmtc = new TH1F ("res_bmtc"+suffix, "BMTC residuals;residual [mm];# of clusters", 100, -5, 5);
     
-   
+    //shift the "before" by a fraction of a bin for clarity
+    double shift_module = -(1.-before_after)*1./5;
     
-    
-    TProfile* residuals_vs_module =  new TProfile ("res_mod_"+suffix, "Residuals (all modules);module # ;residual [mm]", 103, 0, 103);
+    TProfile* residuals_vs_module =  new TProfile ("res_mod_"+suffix, "Residuals (all modules);module # ;residual [mm]", 102, 0+shift_module, 102+shift_module);
     
     //sets the error bar to be the std dev, instead of standard error on the mean
     residuals_vs_module->SetErrorOption("s");
@@ -146,21 +146,31 @@ int main(int argc, char * argv[]) {
     residuals_vs_module->SetMarkerStyle(markerstyle);
     
     
+    //number of bins for the residuals vs kinematics plots.
+    int nbins_kin = 20;
+    //shift the "before" markers by a 5th of a bin for visual clarity
+    double shift_d  = -(1.-before_after)*(dmax-dmin)/nbins_kin/5;
+    double shift_phi  = -(1.-before_after)*(phimax-phimin)/nbins_kin/5;
+    double shift_z  = -(1.-before_after)*(zmax-zmin)/nbins_kin/5;
+    double shift_tandip  = -(1.-before_after)*(tandipmax-tandipmin)/nbins_kin/5;
+    cout << shift_d << endl;
     
-    TProfile* residuals_vs_phi_svt = new  TProfile ("res_phi_svt"+suffix, "SVT residuals vs #phi;#phi [rad];residual [mm]", 30,phimin, phimax);
-    TProfile* residuals_vs_d0_svt =  new TProfile ("res_d0_svt"+suffix, "SVT residuals vs d_{0};d_{0} [mm]; residual [mm]", 30, dmin, dmax);
-    TProfile* residuals_vs_theta_svt =  new TProfile ("res_theta_svt"+suffix, "SVT residuals vs tan#theta_{dip};tan#theta_{dip};residual [mm]", 30, tandipmin, tandipmax);
-    TProfile* residuals_vs_z_svt =  new TProfile ("res_z_svt"+suffix, "SVT residuals vs z;z [mm];residual [mm]", 30, zmin, zmax);
     
-    TProfile* residuals_vs_phi_bmtz = new  TProfile ("res_phi_bmtz"+suffix, "BMTZ residuals vs #phi;#phi [rad];residual [mm]", 30,phimin,phimax);
-    TProfile* residuals_vs_d0_bmtz = new  TProfile ("res_d0_bmtz"+suffix, "BMTZ residuals vs d_{0};d_{0} [mm]; residual [mm]", 30, dmin, dmax);
-    TProfile* residuals_vs_theta_bmtz = new  TProfile ("res_theta_bmtz"+suffix, "BMTZ residuals vs tan#theta_{dip};tan#theta_{dip};residual [mm]", 30, tandipmin, tandipmax);
-    TProfile* residuals_vs_z_bmtz =  new TProfile ("res_z_bmtz"+suffix, "BMTZ residuals vs z;z [mm];residual [mm]", 30, zmin, zmax);
     
-    TProfile* residuals_vs_phi_bmtc = new  TProfile ("res_phi_bmtc"+suffix, "BMTC residuals vs #phi;#phi [rad];residual [mm]", 30, phimin, phimax);
-    TProfile* residuals_vs_d0_bmtc =  new TProfile ("res_d0_bmtc"+suffix, "BMTC residuals vs d_{0};d_{0} [mm]; residual [mm]", 30, dmin, dmax);
-    TProfile* residuals_vs_theta_bmtc =  new TProfile ("res_theta_bmtc"+suffix, "BMTC residuals vs tan#theta_{dip};tan#theta_{dip};residual [mm]", 30, tandipmin, tandipmax);
-    TProfile* residuals_vs_z_bmtc =  new TProfile ("res_z_bmtc"+suffix, "BMTC residuals vs z;z [mm];residual [mm]", 30, zmin, zmax);
+    TProfile* residuals_vs_phi_svt = new  TProfile ("res_phi_svt"+suffix, "SVT residuals vs #phi;#phi [rad];residual [mm]", nbins_kin,phimin+shift_phi, phimax+shift_phi);
+    TProfile* residuals_vs_d0_svt =  new TProfile ("res_d0_svt"+suffix, "SVT residuals vs d_{0};d_{0} [mm]; residual [mm]", nbins_kin, dmin+shift_d, dmax+shift_d);
+    TProfile* residuals_vs_theta_svt =  new TProfile ("res_theta_svt"+suffix, "SVT residuals vs tan#theta_{dip};tan#theta_{dip};residual [mm]", nbins_kin, tandipmin+shift_tandip, tandipmax+shift_tandip);
+    TProfile* residuals_vs_z_svt =  new TProfile ("res_z_svt"+suffix, "SVT residuals vs z;z [mm];residual [mm]", nbins_kin, zmin+shift_z, zmax+shift_z);
+    
+    TProfile* residuals_vs_phi_bmtz = new  TProfile ("res_phi_bmtz"+suffix, "BMTZ residuals vs #phi;#phi [rad];residual [mm]", nbins_kin, phimin+shift_phi,phimax+shift_phi);
+    TProfile* residuals_vs_d0_bmtz = new  TProfile ("res_d0_bmtz"+suffix, "BMTZ residuals vs d_{0};d_{0} [mm]; residual [mm]", nbins_kin, dmin+shift_d, dmax+shift_d);
+    TProfile* residuals_vs_theta_bmtz = new  TProfile ("res_theta_bmtz"+suffix, "BMTZ residuals vs tan#theta_{dip};tan#theta_{dip};residual [mm]", nbins_kin, tandipmin+shift_tandip, tandipmax+shift_tandip);
+    TProfile* residuals_vs_z_bmtz =  new TProfile ("res_z_bmtz"+suffix, "BMTZ residuals vs z;z [mm];residual [mm]", nbins_kin, zmin+shift_z, zmax+shift_z);
+    
+    TProfile* residuals_vs_phi_bmtc = new  TProfile ("res_phi_bmtc"+suffix, "BMTC residuals vs #phi;#phi [rad];residual [mm]", nbins_kin, phimin+shift_phi, phimax+shift_phi);
+    TProfile* residuals_vs_d0_bmtc =  new TProfile ("res_d0_bmtc"+suffix, "BMTC residuals vs d_{0};d_{0} [mm]; residual [mm]", nbins_kin, dmin+shift_d, dmax+shift_d);
+    TProfile* residuals_vs_theta_bmtc =  new TProfile ("res_theta_bmtc"+suffix, "BMTC residuals vs tan#theta_{dip};tan#theta_{dip};residual [mm]", nbins_kin, tandipmin+shift_tandip, tandipmax+shift_tandip);
+    TProfile* residuals_vs_z_bmtc =  new TProfile ("res_z_bmtc"+suffix, "BMTC residuals vs z;z [mm];residual [mm]", nbins_kin, zmin+shift_z, zmax+shift_z);
     
 #define format_profile(profile,min,max) \
     profile->SetMarkerStyle(markerstyle);\
@@ -183,71 +193,7 @@ int main(int argc, char * argv[]) {
     format_profile(residuals_vs_z_bmtc,-5,5)
     format_profile(residuals_vs_theta_bmtc,-5,5)
     
-    /*
-    residuals_vs_d0_svt->SetMarkerStyle(markerstyle);
-    residuals_vs_phi_svt->SetMarkerStyle(markerstyle);
-    residuals_vs_theta_svt->SetMarkerStyle(markerstyle);
-    residuals_vs_z_svt->SetMarkerStyle(markerstyle);
-    residuals_vs_d0_bmtz->SetMarkerStyle(markerstyle);
-    residuals_vs_phi_bmtz->SetMarkerStyle(markerstyle);
-    residuals_vs_theta_bmtz->SetMarkerStyle(markerstyle);
-    residuals_vs_z_bmtz->SetMarkerStyle(markerstyle);
-    residuals_vs_d0_bmtc->SetMarkerStyle(markerstyle);
-    residuals_vs_phi_bmtc->SetMarkerStyle(markerstyle);
-    residuals_vs_theta_bmtc->SetMarkerStyle(markerstyle);
-    residuals_vs_z_bmtc->SetMarkerStyle(markerstyle);
     
-    residuals_vs_d0_svt->SetMarkerColor(color);
-    residuals_vs_phi_svt->SetMarkerColor(color);
-    residuals_vs_theta_svt->SetMarkerColor(color);
-    residuals_vs_z_svt->SetMarkerColor(color);
-    residuals_vs_d0_bmtz->SetMarkerColor(color);
-    residuals_vs_phi_bmtz->SetMarkerColor(color);
-    residuals_vs_theta_bmtz->SetMarkerColor(color);
-    residuals_vs_z_bmtz->SetMarkerColor(color);
-    residuals_vs_d0_bmtc->SetMarkerColor(color);
-    residuals_vs_phi_bmtc->SetMarkerColor(color);
-    residuals_vs_theta_bmtc->SetMarkerColor(color);
-    residuals_vs_z_bmtc->SetMarkerColor(color);
-    
-    residuals_vs_d0_svt->SetLineColor(color);
-    residuals_vs_phi_svt->SetLineColor(color);
-    residuals_vs_theta_svt->SetLineColor(color);
-    residuals_vs_z_svt->SetLineColor(color);
-    residuals_vs_d0_bmtz->SetLineColor(color);
-    residuals_vs_phi_bmtz->SetLineColor(color);
-    residuals_vs_theta_bmtz->SetLineColor(color);
-    residuals_vs_z_bmtz->SetLineColor(color);
-    residuals_vs_d0_bmtc->SetLineColor(color);
-    residuals_vs_phi_bmtc->SetLineColor(color);
-    residuals_vs_theta_bmtc->SetLineColor(color);
-    residuals_vs_z_bmtc->SetLineColor(color);
-    
-    residuals_vs_d0_svt->SetMaximum(0.3);
-    residuals_vs_phi_svt->SetMaximum(0.3);
-    residuals_vs_theta_svt->SetMaximum(0.3);
-    residuals_vs_z_svt->SetMaximum(0.3);
-    residuals_vs_d0_bmtz->SetMaximum(3);
-    residuals_vs_phi_bmtz->SetMaximum(3);
-    residuals_vs_theta_bmtz->SetMaximum(3);
-    residuals_vs_z_bmtz->SetMaximum(3);
-    residuals_vs_d0_bmtc->SetMaximum(3);
-    residuals_vs_phi_bmtc->SetMaximum(3);
-    residuals_vs_theta_bmtc->SetMaximum(3);
-    residuals_vs_z_bmtc->SetMaximum(3);
-    
-    residuals_vs_d0_svt->SetMinimum(-0.3);
-    residuals_vs_phi_svt->SetMinimum(-0.3);
-    residuals_vs_theta_svt->SetMinimum(-0.3);
-    residuals_vs_z_svt->SetMinimum(-0.3);
-    residuals_vs_d0_bmtz->SetMinimum(-3);
-    residuals_vs_phi_bmtz->SetMinimum(-3);
-    residuals_vs_theta_bmtz->SetMinimum(-3);
-    residuals_vs_z_bmtz->SetMinimum(-3);
-    residuals_vs_d0_bmtc->SetMinimum(-3);
-    residuals_vs_phi_bmtc->SetMinimum(-3);
-    residuals_vs_theta_bmtc->SetMinimum(-3);
-    residuals_vs_z_bmtc->SetMinimum(-3);*/
     
     cout << "initialized histograms" << endl;
     int events = 0, tracks=0;
@@ -300,7 +246,7 @@ int main(int argc, char * argv[]) {
       int ndof = aevent->GetNdof();
       float chi2 = aevent->GetChi2();
       
-      cout << d0 << " "<< phi << " "<< z << " " << tandip << endl;
+      //cout << d0 << " "<< phi << " "<< z << " " << tandip << endl;
       
       hchi2ndof->Fill(chi2/ndof);
       
@@ -310,7 +256,6 @@ int main(int argc, char * argv[]) {
         double resid = (*aevent->GetMeasurements())(j)-(*aevent->GetTrackPrediction())(j);
         double res = sqrt((*aevent->GetMeasuredCovariance())[j][j]);
         double module = aevent->GetIndex()->At(j);
-        
         
         
         residuals_vs_module->Fill(module,resid);
@@ -348,30 +293,33 @@ int main(int argc, char * argv[]) {
     
     TString opt = before_after ? "SAME" : "";
     c1->cd(1);
-    legend1->AddEntry(residuals_svt, Form(suffix + ",\n RMS = %.1f mm",residuals_svt->GetRMS()),"l");
+    legend1->AddEntry(residuals_svt, Form(suffix + ",\n RMS = %.2f mm",residuals_svt->GetRMS()),"l");
     residuals_svt->Draw(opt);
-    residuals_svt->SetMaximum(residuals_svt->GetMaximum()*2);
+    residuals_svt->SetMaximum(residuals_svt->GetMaximum()*3);
     c1->cd(2);
-    legend2->AddEntry(residuals_bmtz, Form(suffix + ",\n RMS = %.1f mm",residuals_bmtz->GetRMS()),"l");
+    legend2->AddEntry(residuals_bmtz, Form(suffix + ",\n RMS = %.2f mm",residuals_bmtz->GetRMS()),"l");
     residuals_bmtz->Draw(opt);
-    residuals_bmtz->SetMaximum(residuals_bmtz->GetMaximum()*3);
+    residuals_bmtz->SetMaximum(residuals_bmtz->GetMaximum()*5);
     c1->cd(3);
-    legend3->AddEntry(residuals_bmtc, Form(suffix+ ",\n RMS = %.1f mm",residuals_bmtc->GetRMS()), "l");
+    legend3->AddEntry(residuals_bmtc, Form(suffix+ ",\n RMS = %.2f mm",residuals_bmtc->GetRMS()), "l");
     residuals_bmtc->Draw(opt);
     residuals_bmtc->SetMaximum(residuals_bmtc->GetMaximum()*2);
     c1->cd(4);
     legend4->AddEntry(hchi2ndof, Form(suffix+", mean = %.1f",hchi2ndof->GetMean()),"l");
-    hchi2ndof->SetMaximum(hchi2ndof->GetMaximum()*3);
+    hchi2ndof->SetMaximum(hchi2ndof->GetMaximum()*10);
     hchi2ndof->Draw(opt);
     
-    
+    TLine* line = new TLine();
+    line->SetLineStyle(2);
     c2->cd();
+    line->DrawLine(0,0,102,0);
+    residuals_vs_module->SetMinimum(-2);
+    residuals_vs_module->SetMaximum(3);
     residuals_vs_module->Draw(opt);
     legend5->AddEntry(residuals_vs_module,suffix, "lp");
     
     
-    TLine* line = new TLine();
-    line->SetLineStyle(2);
+ 
     c3->cd(1);residuals_vs_d0_svt->Draw(opt);
     line->DrawLine(dmin,0,dmax,0);
     c3->cd(4);residuals_vs_phi_svt->Draw(opt);
@@ -406,7 +354,7 @@ int main(int argc, char * argv[]) {
   }
   
   
-  TString ext = "png";
+  TString ext = "pdf";
   if(!(plotsDir==TString())){
     c1->cd(1);
     legend1->Draw();
@@ -420,6 +368,27 @@ int main(int argc, char * argv[]) {
     
     c2->cd();
     legend5->Draw();
+    TLine* line = new TLine();
+    line->SetLineStyle(3);
+    double xs[] = {42,84,87,93,96,99};
+    for(double x : xs){
+      line->DrawLine(x,-2,x,3);
+    }
+    
+    TText *text = new TText();
+    text->SetTextSize(.03);
+    text->DrawText(12, 1, "SVT (inner)");
+    text->DrawText(12+42, 1, "SVT (outer)");
+    
+    text->DrawText(90, 2.5, "BMT");
+    
+    text->DrawText(84+1, -1.8, "C");
+    text->DrawText(87+1, -1.8, "Z");
+    text->DrawText(90+1, -1.8, "Z");
+    text->DrawText(93+1, -1.8, "C");
+    text->DrawText(96+1, -1.8, "Z");
+    text->DrawText(99+1, -1.8, "C");
+    
     c2->SaveAs(plotsDir+"/residuals_module." + ext);
     c3->cd(1);
     legend5->Draw();

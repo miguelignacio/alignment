@@ -8,6 +8,7 @@
 #include <TROOT.h>
 #include <TDatabasePDG.h>
 #include <TLorentzVector.h>
+#include <TF1.h>
 #include <TH1.h>
 #include <TH2.h>
 #include <TChain.h>
@@ -486,6 +487,11 @@ int main(int argc, char * argv[]) {
         legend->AddEntry(h, Form("layer %d",lay));
         if(h->GetMaximum()>max)
           max = h->GetMaximum();
+        /*TF1 *f1 = new TF1(Form("f%d",lay),"gaus",h->GetMean(),-5,5);
+        f1->SetLineColor(colors[lay]);
+        f1->SetLineStyle(7);
+        f1->SetParameters(h->GetMaximum(), h->GetMean(), h->GetRMS() );*/
+        h->Fit("gaus");
       }
       for(int lay = 0; lay<6;lay++){
         auto h = residuals_BMT[lay*3+sec];
@@ -494,6 +500,9 @@ int main(int argc, char * argv[]) {
       legend->Draw();
       drawLabel(label);c->SaveAs(plotsDir+Form("/residuals_BMT_sec%d.png",sec));
     }
+    
+    //BMT residuals 18 panels
+    
 
 
     residuals_beamspot->Draw();

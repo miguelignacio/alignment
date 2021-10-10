@@ -1,5 +1,6 @@
 initial_var=rga_fall2018_svtsurvey
-final_var=bestsofar2
+#final_var=bestsofar2
+final_var=svt_tb_TxTy
 
 this_dir=`pwd`
 

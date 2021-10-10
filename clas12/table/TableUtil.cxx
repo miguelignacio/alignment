@@ -232,6 +232,7 @@ int main(int argc, char * argv[]) {
     
     int sector, layer, component;
     
+    fout << "#" << endl;
     for(int i = 0; i<84; i++){
       
       fin >> sector >> layer >> component >> tx >> ty >> tz >> rx >> ry >> rz >> ra;
@@ -271,19 +272,20 @@ int main(int argc, char * argv[]) {
   } else if (detector==BMT){
     cout << "BMT" << endl;
     int sector, layer, component;
+    fout << "#" << endl;
     for(int i = 0; i<18; i++){
       fin >> sector >> layer >> component >> tx >> ty >> tz >> rx >> ry >> rz ;
       cout << i << " " << sector << " " << layer << " " << component <<" " << tz << "   ";
       cout << "old tx = " << tx << ";  delta = " << Tx[i] << endl;
       int j = 84+(layer-1)*3 + sector-1;
       
-      if(layer == 1 || layer == 4 || layer == 6){ //don't change the C layers yet
+      /*if(layer == 1 || layer == 4 || layer == 6){ //don't change the C layers yet
         Tx[j] = 0;
         Ty[j] = 0;
         Rx[j] = 0;
         Ry[j] = 0;
         Rz[j] = 0;
-      }
+      }*/
       int sign = -1;
       fout << sector << "\t" << layer << "\t" << component << "\t" << tx+sign*Tx[j] << "\t" << ty+sign*Ty[j] << "\t" << tz+sign*Tz[j] << "\
       \t" << rx+sign*Rx[j] << "\t" << ry+sign*Ry[j] << "\t" << rz+sign*Rz[j] << "\n";

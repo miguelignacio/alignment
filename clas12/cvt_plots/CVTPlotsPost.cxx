@@ -116,6 +116,7 @@ int main(int argc, char * argv[]) {
   
   TString inputFileName;
   TString plotsDir;
+  TString config="TxTy";
   
   vector<TString> inputFiles;
   for(Int_t i=1;i<argc;i++){
@@ -128,7 +129,43 @@ int main(int argc, char * argv[]) {
     if (opt.Contains("--plotsdir=")){
       plotsDir = opt(11,opt.Sizeof());
     }
+    
+    if (opt.Contains("--config=")){
+      config = opt(9,opt.Sizeof());
+    }
   }
+  
+  int orderTx = -1;
+  int orderTy = -1;
+  int orderTz = -1;
+  int orderRx = -1;
+  int orderRy = -1;
+  int orderRz = -1;
+  
+  int nparams = config.Sizeof()/2;
+  for(int i = 0; i<config.Sizeof()/2; i++){
+    TString varname =config(2*i,2);
+    if (varname == "Tx")
+      orderTx = i;
+    else if (varname == "Ty")
+      orderTy =  i;
+    else if (varname == "Tz")
+      orderTz = i;
+    else if (varname == "Rx")
+      orderRx = i;
+    else if (varname == "Ry")
+      orderRy = i;
+    else if (varname == "Rz")
+      orderRz = i;
+    else{
+      cout << "invalid variable in config string: "<< varname << endl;
+      cout << "invalid config string: "  << config << ".  Example:  TxTyRz -> translations in x, translations in y, rotation in z"<<  endl;
+      return(0);
+    }
+  }
+  
+  
+  
   //if there is no input file
   if(inputFileName==TString())  {
     std::cout << " *** please provide a file name..." << std::endl;
@@ -178,39 +215,88 @@ int main(int argc, char * argv[]) {
   c->SaveAs("params.pdf");
   TH1* hparamsx = new TH1F("paramsx","paramsx",102, 0, 102);
   TH1* hparamsy = new TH1F("paramsy","paramsy",102, 0, 102);
-  TH1* hparamsr = new TH1F("paramsr","paramsr",102, 0, 102);
+  TH1* hparamsz = new TH1F("paramsz","paramsz",102, 0, 102);
+  TH1* hparamsrx = new TH1F("paramsrx","paramsrx",102, 0, 102);
+  TH1* hparamsry = new TH1F("paramsry","paramsry",102, 0, 102);
+  TH1* hparamsrz = new TH1F("paramsrz","paramsrz",102, 0, 102);
   
   //infer the number of parameters per module: if there is no BMT, then it's N/84, else it's N/102
-  int nparam = N%102 == 0? N/102 : N/84;
+  
   for(int i = 0; i< 102;i++){
-    hparamsx->SetBinContent(i+1,params[nparam*i]);
-    hparamsx->SetBinError(i+1,dparams[nparam*i]);
-
-    hparamsy->SetBinContent(i+1,params[nparam*i+1]);
-    hparamsy->SetBinError(i+1,dparams[nparam*i+1]);
-    if(nparam>2){
-      hparamsr->SetBinContent(i+1,params[nparam*i+2]);
-      hparamsr->SetBinError(i+1,dparams[nparam*i+2]);
+    if(orderTx >= 0){
+      hparamsx->SetBinContent(i+1,params[nparams*i+orderTx]);
+      hparamsx->SetBinError(i+1,dparams[nparams*i+orderTx]);
+    }
+    if(orderTy >= 0){
+      hparamsy->SetBinContent(i+1,params[nparams*i+orderTy]);
+      hparamsy->SetBinError(i+1,dparams[nparams*i+orderTz]);
+    }
+    if(orderTz >= 0){
+      hparamsz->SetBinContent(i+1,params[nparams*i+orderTz]);
+      hparamsz->SetBinError(i+1,dparams[nparams*i]+orderTz);
+    }
+    if(orderRx >= 0){
+      hparamsrx->SetBinContent(i+1,params[nparams*i+orderRx]);
+      hparamsrx->SetBinError(i+1,dparams[nparams*i+orderRx]);
+    }
+    if(orderRy >= 0){
+      hparamsry->SetBinContent(i+1,params[nparams*i+orderRy]);
+      hparamsry->SetBinError(i+1,dparams[nparams*i+orderRy]);
+    }
+    if(orderRz >= 0){
+      hparamsrz->SetBinContent(i+1,params[nparams*i+orderRz]);
+      hparamsrz->SetBinError(i+1,dparams[nparams*i+orderRz]);
     }
   }
-  hparamsx->Draw();
-  c->SaveAs(plotsDir+"/Tx.pdf");
-  hparamsy->Draw();
-  c->SaveAs(plotsDir+"/Ty.pdf");
-  if(nparam>2){
-    hparamsr->Draw();
-    c->SaveAs(plotsDir+"/Rz.pdf");
+  if (orderTx >= 0){
+    hparamsx->Draw();
+    c->SaveAs(plotsDir+"/Tx.pdf");
+    TH2F* hx_xy = createPlotXY(hparamsx, "translation x", "tx");
+    hx_xy->Draw("COLZ");
+    c->SaveAs(plotsDir+"/Tx_xy.pdf");
   }
-  TH2F* hx_xy = createPlotXY(hparamsx, "translation x", "x");
-  hx_xy->Draw("COLZ");
-  c->SaveAs(plotsDir+"/Tx_xy.pdf");
-  TH2F* hy_xy = createPlotXY(hparamsy, "translation y", "y");
-  hy_xy->Draw("COLZ");
-  c->SaveAs(plotsDir+"/Ty_xy.pdf");
-
-  TH2F* hr_xy = createPlotXY(hparamsr, "rotation z", "phi");
-  hr_xy->Draw("COLZ");
-  c->SaveAs(plotsDir+"/Rz_xy.pdf");
+  if (orderTy >= 0){
+    hparamsy->Draw();
+    c->SaveAs(plotsDir+"/Ty.pdf");
+    TH2F* hy_xy = createPlotXY(hparamsy, "translation y", "ty");
+    hy_xy->Draw("COLZ");
+    c->SaveAs(plotsDir+"/Ty_xy.pdf");
+  }
+  if (orderTz >= 0){
+    hparamsy->Draw();
+    c->SaveAs(plotsDir+"/Tz.pdf");
+    TH2F* hz_xy = createPlotXY(hparamsz, "translation z", "tz");
+    hz_xy->Draw("COLZ");
+    c->SaveAs(plotsDir+"/Tz_xy.pdf");
+  }
+  if (orderRx >= 0){
+    hparamsrx->Draw();
+    c->SaveAs(plotsDir+"/Rx.pdf");
+    TH2F* hrx_xy = createPlotXY(hparamsrx, "rotation x", "rx");
+    hrx_xy->Draw("COLZ");
+    c->SaveAs(plotsDir+"/Rx_xy.pdf");
+  }
+  if (orderRy >= 0){
+    hparamsry->Draw();
+    c->SaveAs(plotsDir+"/Ry.pdf");
+    TH2F* hry_xy = createPlotXY(hparamsry, "rotation y", "ry");
+    hry_xy->Draw("COLZ");
+    c->SaveAs(plotsDir+"/Ry_xy.pdf");
+  }
+  if (orderRz >= 0){
+    hparamsrz->Draw();
+    c->SaveAs(plotsDir+"/Rz.pdf");
+    TH2F* hrz_xy = createPlotXY(hparamsrz, "rotation y", "rz");
+    hrz_xy->Draw("COLZ");
+    c->SaveAs(plotsDir+"/Rz_xy.pdf");
+  }
+  
+  
+  
+  
+  
+  
+  
 
   
   TH1F* allVals = new TH1F("all params", "all params",50, -10,10);
@@ -245,16 +331,16 @@ int main(int argc, char * argv[]) {
   offDiagCovsNorm->Draw();
   c->SaveAs(plotsDir+"/offDiagonalsNormed.pdf");
   
-  {
+  if(orderTx >=0 && orderTy>=0){
     double x[102];
     double y[102];
     double dx[102];
     double dy[102];
     for(int i = 0; i<102; i++){
-      x[i] = params[nparam*i];
-      y[i] = params[nparam*i+1];
-      dx[i] = dparams[nparam*i];
-      dy[i] = dparams[nparam*i+1];
+      x[i] = params[nparams*i+orderTx];
+      y[i] = params[nparams*i+orderTy];
+      dx[i] = dparams[nparams*i+orderTx];
+      dy[i] = dparams[nparams*i+orderTy];
     }
     
     TGraphErrors * g =new TGraphErrors(102,x,y,dx,dy);
@@ -273,17 +359,34 @@ int main(int argc, char * argv[]) {
   hstability->Draw();
   c->SaveAs(plotsDir+"/stability.pdf");
   
-
-  for(int j = 0; j<2; j++){
+  char* param_names[] = {"Tx","Ty","Tz","Rx","Ry","Rz"};
+  for(int j = 0; j<nparams; j++){
+    char* param_name = "";
+    if(j == orderTx)
+      param_name = "Tx";
+    else if(j == orderTy)
+      param_name = "Ty";
+    else if(j == orderTz)
+      param_name = "Tz";
+    else if(j == orderRx)
+      param_name = "Rx";
+    else if(j == orderRy)
+      param_name = "Ry";
+    else if(j == orderRz)
+      param_name = "Rz";
+    
     for (int sec = 0; sec<3;sec++){
       TLegend *legend = new TLegend(0.75, 0.6,1,0.95);
       double max = 0;
       double min = 0;
       int colors[] = {kRed,kCyan+1,kYellow+1,kGreen+1,kMagenta,kBlue};
       for (int lay = 0; lay<6; lay++){
-        int i = 6*lay+2*sec+j+168;
+        int i = nparams*(3*lay+sec+84)+j;
+        cout << "nparam" << nparams << endl;
         TH1* h = (TH1*)inputFile->Get(Form("hAliPar%d",i));
-        h->SetTitle(Form("Evolution of %s parameters (BMT sec %d);track #;", j==1?"y":"x",sec));
+        cout << "h" << i << endl;
+        
+        h->SetTitle(Form("Evolution of %s parameters (BMT sec %d);track #;", param_name,sec));
         h->Draw(lay == 0 ? "": "SAME");
         h->SetLineWidth(2);
         h->SetLineColor(colors[lay]);
@@ -294,30 +397,30 @@ int main(int argc, char * argv[]) {
           min = h->GetMinimum();
       }
       for(int lay = 0; lay<6;lay++){
-        int i = 6*lay+2*sec+j+168;
+        int i = nparams*(3*lay+sec+84)+j;
         auto h = (TH1*)inputFile->Get(Form("hAliPar%d",i));
         h->GetYaxis()->SetRangeUser(min,max);
         h->GetXaxis()->SetRangeUser(0,last);
       }
       legend->Draw();
-      c->SaveAs(plotsDir+Form("/bmt_params_%s_sec%d.pdf", j==1?"y":"x",sec));
+      c->SaveAs(plotsDir+Form("/bmt_params_%s_sec%d.pdf", param_name,sec));
     }
   }
   
   TLegend* legend = new TLegend(0.75, 0.6,1,0.95);
   
-  int colors[] = {kRed,kCyan+1,kYellow+1,kGreen+1,kMagenta,kBlue};
-  for (int j = 0; j<2; j++){
+  /*int colors[] = {kRed,kCyan+1,kYellow+1,kGreen+1,kMagenta,kBlue};
+  for (int j = 0; j<6; j++){
     int i =j+168+36;
     TH1* h = (TH1*)inputFile->Get(Form("hAliPar%d",i));
     h->SetTitle("Evolution of parameters (beamspot);track #");
     h->SetLineColor(colors[j]);
     h->SetLineWidth(2);
     h->Draw(j == 0 ?"":"SAME");
-    legend->AddEntry(h, j == 0? "x":"y");
-    
+    legend->AddEntry(h, param_names[j]);
   }
-  for (int j = 0; j<2; j++){
+  
+  for (int j = 0; j<6; j++){
     int i =j+168+36;
     TH1* h = (TH1*)inputFile->Get(Form("hAliPar%d",i));
     h->GetXaxis()->SetRangeUser(0,last);
@@ -326,17 +429,17 @@ int main(int argc, char * argv[]) {
     
   legend->Draw();
   c->SaveAs(plotsDir+"/params_beam_xy.pdf");
+  */
   
   
-  
-  if(nparam==2){
+  if(nparams==2){
     cout << "double tx = {" ;
     for(int i =0;i<N/2;i++){
       cout << params[2*i];
       if(i != N/2-1){
-	cout << ", ";
-	if(i%5 == 0)
-	  cout << endl;
+        cout << ", ";
+        if(i%5 == 0)
+          cout << endl;
       }
       else cout << "};\n";
     }
