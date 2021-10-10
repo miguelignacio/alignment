@@ -247,7 +247,7 @@ int main(int argc, char * argv[]) {
       
       //double ux =Rx[j]
       
-      int sign = -1;
+      int sign = 1;
       double rprevx = ra*rx;
       double rprevy = ra*ry;
       double rprevz = ra*rz;
@@ -286,7 +286,7 @@ int main(int argc, char * argv[]) {
         Ry[j] = 0;
         Rz[j] = 0;
       }*/
-      int sign = -1;
+      int sign = 1;
       fout << sector << "\t" << layer << "\t" << component << "\t" << tx+sign*Tx[j] << "\t" << ty+sign*Ty[j] << "\t" << tz+sign*Tz[j] << "\
       \t" << rx+sign*Rx[j] << "\t" << ry+sign*Ry[j] << "\t" << rz+sign*Rz[j] << "\n";
       
