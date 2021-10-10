@@ -217,12 +217,12 @@ int main(int argc, char * argv[]) {
         //TVectorD* q;
         //getFromBank(q, bank_q,i);
         //cout << "checkpoint1" <<endl;
-        cout << bank_q.getSchema().getEntryOrder("element_0_0") << " " << bank_q.getSchema().getEntryOrder("element_1_0") << " " << bank_q.getSchema().getEntryOrder("element_2_0") << " " << bank_q.getSchema().getEntryOrder("element_3_0") << endl;
+        //cout << bank_q.getSchema().getEntryOrder("element_0_0") << " " << bank_q.getSchema().getEntryOrder("element_1_0") << " " << bank_q.getSchema().getEntryOrder("element_2_0") << " " << bank_q.getSchema().getEntryOrder("element_3_0") << endl;
         q0 = bank_q.getFloat(bank_q.getSchema().getEntryOrder("element_0_0"),i);
         q1 = bank_q.getFloat(bank_q.getSchema().getEntryOrder("element_1_0"),i);
         q2 = bank_q.getFloat(bank_q.getSchema().getEntryOrder("element_2_0"),i);
         q3 = bank_q.getFloat(bank_q.getSchema().getEntryOrder("element_3_0"),i);
-        cout << q0 << " " << q1 << " " << q2 << " " << q3 << endl;
+        //cout << q0 << " " << q1 << " " << q2 << " " << q3 << endl;
         //cout << "checkpoint2" <<endl;
         AlignTree->Fill();
         

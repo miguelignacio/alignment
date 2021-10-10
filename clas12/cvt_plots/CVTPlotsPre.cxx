@@ -108,7 +108,7 @@ TH2F* createPlotXY(TH1* h, TString title, TString ztitle, TString mode ="mean"){
       double radii[] = {146,161,176,191,206,221};
       double rm = radii[layer], drm = 4;
       double phisector = -TMath::Pi()/6+sector*TMath::Pi()*2/3;
-      cout<<  mm << " " << layer << " " << sector << " " << n << " " << phisector*180/TMath::Pi() << endl;
+      //cout<<  mm << " " << layer << " " << sector << " " << n << " " << phisector*180/TMath::Pi() << endl;
       
       for(int i = 0; i<hxy->GetNbinsX(); i++){
 	double x = -R +2*i*R/Nbins;
