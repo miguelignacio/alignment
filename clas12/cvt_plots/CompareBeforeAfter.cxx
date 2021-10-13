@@ -78,7 +78,9 @@ int main(int argc, char * argv[]) {
   gStyle->SetOptStat(0);
   TCanvas* c1 = new TCanvas("c1","c1",800,800);
   c1->Divide(2,2);
-  
+
+  gStyle->SetPadLeftMargin(.075);
+  gStyle->SetPadRightMargin(.075);
   TCanvas* c2 = new TCanvas("c2","c2",1200,600);
   
   gStyle->SetPadLeftMargin(.15);
@@ -92,7 +94,7 @@ int main(int argc, char * argv[]) {
   TLegend* legend3 = new TLegend(0.15, 0.7, 0.70, 0.9);
   TLegend* legend4 = new TLegend(0.15, 0.7, 0.70, 0.9);
   
-  TLegend* legend5 = new TLegend(0.15, 0.7, 0.50, 0.9);
+  TLegend* legend5 = new TLegend(0.075, 0.75, 0.40, 0.9);
   
   
   
@@ -113,11 +115,11 @@ int main(int argc, char * argv[]) {
     
     TString suffix = before_after ? "After" : "Before";
     
-    TH1F*  hchi2ndof = new TH1F("hchi2ndof"+suffix, "track #chi^{2}/ndof;track #chi^{2}/n_{dof};# of events", 100, 0, 40);
+    TH1F*  hchi2ndof = new TH1F("hchi2ndof"+suffix, "track #chi^{2}/ndof;track #chi^{2}/n_{dof};# of events", 100, 0, 20);
     
-    TH1F* residuals_svt = new TH1F ("res_svt"+suffix, "SVT residuals;residual [mm];# of clusters", 100, -2, 2);
-    TH1F* residuals_bmtz = new TH1F ("res_bmtz"+suffix, "BMTZ residuals;residual [mm];# of clusters", 100, -5, 5);
-    TH1F* residuals_bmtc = new TH1F ("res_bmtc"+suffix, "BMTC residuals;residual [mm];# of clusters", 100, -5, 5);
+    TH1F* residuals_svt = new TH1F ("res_svt"+suffix, "SVT residuals;residual [mm];# of clusters", 100, -1.5, 1.5);
+    TH1F* residuals_bmtz = new TH1F ("res_bmtz"+suffix, "BMTZ residuals;residual [mm];# of clusters", 100, -3, 3);
+    TH1F* residuals_bmtc = new TH1F ("res_bmtc"+suffix, "BMTC residuals;residual [mm];# of clusters", 100, -3, 3);
     
     //shift the "before" by a fraction of a bin for clarity
     double shift_module = -(1.-before_after)*1./5;
@@ -312,6 +314,7 @@ int main(int argc, char * argv[]) {
     TLine* line = new TLine();
     line->SetLineStyle(2);
     c2->cd();
+    residuals_vs_module->GetYaxis()->SetTitleOffset(0.5);
     line->DrawLine(0,0,102,0);
     residuals_vs_module->SetMinimum(-2);
     residuals_vs_module->SetMaximum(3);
@@ -372,22 +375,27 @@ int main(int argc, char * argv[]) {
     line->SetLineStyle(3);
     double xs[] = {42,84,87,93,96,99};
     for(double x : xs){
-      line->DrawLine(x,-2,x,3);
+      if(x == 84)
+        line->SetLineWidth(2);
+      else
+        line->SetLineWidth(1);
+      line->DrawLine(x,-2,x,x <= 84? 3: 2.4);
     }
     
     TText *text = new TText();
-    text->SetTextSize(.03);
+    text->SetTextSize(.06);
     text->DrawText(12, 1, "SVT (inner)");
     text->DrawText(12+42, 1, "SVT (outer)");
     
     text->DrawText(90, 2.5, "BMT");
+    text->SetTextSize(.04);
     
-    text->DrawText(84+1, -1.8, "C");
-    text->DrawText(87+1, -1.8, "Z");
-    text->DrawText(90+1, -1.8, "Z");
-    text->DrawText(93+1, -1.8, "C");
-    text->DrawText(96+1, -1.8, "Z");
-    text->DrawText(99+1, -1.8, "C");
+    text->DrawText(84+1, 2, "C");
+    text->DrawText(87+1, 2, "Z");
+    text->DrawText(90+1, 2, "Z");
+    text->DrawText(93+1, 2, "C");
+    text->DrawText(96+1, 2, "Z");
+    text->DrawText(99+1, 2, "C");
     
     c2->SaveAs(plotsDir+"/residuals_module." + ext);
     c3->cd(1);

@@ -88,7 +88,7 @@ void kfa(const char * configFile = "align.cfg", int gLogLevel = 2)
   double startValue = mEnv.GetValue("startValue", 0.);
   double startError = mEnv.GetValue("startError", 1E-2);
   double startFixedValue = mEnv.GetValue("startFixedValue", 0.);
-
+  
   // outlier rejection
   double probCut = mEnv.GetValue("probabilityCut", 0.5);
   double deviationCut = mEnv.GetValue("deviationCut", 1.0);
@@ -111,6 +111,12 @@ void kfa(const char * configFile = "align.cfg", int gLogLevel = 2)
   cout << "Alignment request for " << nAlignables << " alignables" 
        << " with " << nParameters << " parameters." << endl;
 
+  //start error for specific parameters (added by Sebouh Paul)
+  double startErrorsByParam[nParameters];
+  for (int i=0; i < nParameters; i++) {
+      startErrorsByParam[i] = mEnv.GetValue(Form("startErrorOfParameter%d",i), startError);
+  }
+  
   // init number of updates counters for each alignable
   int nUpdates[nAlignables];
   for (int i=0; i < nAlignables; i++){
@@ -181,7 +187,7 @@ void kfa(const char * configFile = "align.cfg", int gLogLevel = 2)
   TMatrixDSym alignmentCovariance(nAlignables*nParameters);
   TMatrixDSym copyAlignmentCovariance(nAlignables*nParameters);
   for (int i = 0; i < nAlignables*nParameters; i++) {
-    alignmentCovariance[i][i] = startError;
+    alignmentCovariance[i][i] = startErrorsByParam[i%nParameters];
   }
 
   // Fix alignables
