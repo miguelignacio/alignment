@@ -1,18 +1,15 @@
-#maxiter=6
-#initial_var=bestsofar
-#initial_var=rga_fall2018_svtsurvey
-#dev6 #dev6 from the previous stage.  
-#config=TxTyRxRyRz
-#n=100000
-#align_cfg=align_zerofield_bmtz.cfg
-#input_file1=/Users/spaul/alignment/clas12/scripts/misc/filtered.hipo
-#input_file2=
+thisdir=`pwd`
+cp align_default.yaml align.yaml
 
-#anything below this line stays the same
-set_variation_and_config(){
+set_variation(){
     variation=$1
-    config=$2
-    cat align_default.yaml | sed 's/variation:\ *".*"/variation:\ "'${variation}'"/g' | sed 's/config:\ *".*"/config:\ "'${config}'"/g' >align.yaml
+    cp align.yaml tmp.yaml
+    cat tmp.yaml | sed 's/variation:\ *".*"/variation:\ "'${variation}'"/g'  >align.yaml
+}
+set_config(){
+    config=$1
+    cp align.yaml tmp.yaml
+    cat tmp.yaml | sed 's/alignVariables:\ *".*"/alignVariables:\ "\'${config}'"/g' >align.yaml
 }
 
 set_cosmics(){
@@ -28,12 +25,15 @@ compile(){
     cp ~/clas12-offline-software/reconstruction/cvt/target/clas12detector-cvt-1.0-SNAPSHOT.jar ~/clas12-offline-software/coatjava/lib/services/;
     cd ${thisdir};
 }
-compile
+if $recompile == "true"; then
+    compile
+fi
 
-set_variation_and_config ${initial_var} ${config} 
+set_config ${config}
 
+set_variation ${initial_var}
 prev=${initial_var}
-thisdir=`pwd`
+
 
 mkdir vars
 
@@ -75,7 +75,7 @@ do
     #this is this kfa result file name (according to run_recon_kfa.sh)
     result_file=${thisdir}/plots_pass_${i}/align_result.root
     
-    cd ${this_dir}; cd ../../table/
+    cd ${thisdir}; cd ../../table/
     ccdb mkvar dev${i} -p ${prev}
     #BMT
     ccdb dump /geometry/cvt/mvt/alignment -v $prev -r 11 | grep -v '#' > prev.txt
@@ -88,7 +88,8 @@ do
     ccdb add /geometry/cvt/svt/layeralignment new.txt -v dev${i} -r 11-11
     cp new.txt ${thisdir}/vars/dev${i}_svt.txt
     #set the variation for the next iteration
-    cd ${thisdir}; ./changeVariation.sh align.yaml dev${i}
+    cd ${thisdir};
+    set_variation dev${i}
     say "done with iteration" ${i}
     prev=dev${i}
 done 
