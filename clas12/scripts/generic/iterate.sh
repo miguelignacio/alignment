@@ -50,17 +50,24 @@ do
     label=pass_${i}
 
     set_cosmics false
-    recon-util -i ${input_file_zf} -o ${thisdir}/${plotsdir}/prealign_zf.hipo -y align.yaml -n $n
-    #set_cosmics true
-    #recon-util -i ${input_file_cosmics} -o ${thisdir}/${plotsdir}/prealign_cosmics.hipo -y align.yaml -n $n
+    cp align.yaml align_zf.yaml #create a copy of the yaml file
+    recon-util -i ${input_file_zf} -o ${thisdir}/${plotsdir}/prealign_zf.hipo -y align_zf.yaml -n $n &
+    set_cosmics true
+    cp align.yaml align_cosmic.yaml #create a copy of the yaml file
+    recon-util -i ${input_file_cosmics} -o ${thisdir}/${plotsdir}/prealign_cosmics.hipo -y align_cosmic.yaml -n $n &
 
+    wait
+    hipo-utils -merge -o ${thisdir}/${plotsdir}/prealign.hipo ${thisdir}/${plotsdir}/prealign_zf.hipo ${thisdir}/${plotsdir}/prealign_cosmics.hipo
+    #uncomment one of the following lines when debugging for either the cosmics or field-off tracks.  
+    #cp ${thisdir}/${plotsdir}/prealign_cosmics.hipo ${thisdir}/${plotsdir}/prealign.hipo
+    #cp ${thisdir}/${plotsdir}/prealign_zf.hipo ${thisdir}/${plotsdir}/prealign.hipo
     
     cd ~/alignment/clas12/hipo2root; #make clean Adapter;
-    ./Adapter ${thisdir}/${plotsdir}/prealign_zf.hipo --out=${thisdir}/${plotsdir}/prealign.root
+    ./Adapter ${thisdir}/${plotsdir}/prealign.hipo --out=${thisdir}/${plotsdir}/prealign.root
 
     #pre-alignment plots
     cd ../cvt_plots/; #make clean; make
-    ./CVTPlotsPre --in=${thisdir}/${plotsdir}/prealign.root --plotsdir=${thisdir}/${plotsdir} -l $2
+    ./CVTPlotsPre --in=${thisdir}/${plotsdir}/prealign.root --plotsdir=${thisdir}/${plotsdir} -l $label
     
     cd ${thisdir}/${plotsdir}
     
@@ -69,6 +76,9 @@ do
     cd ../../../cvt_plots/; #make clean; make
     ./CVTPlotsPost --in=${thisdir}/${plotsdir}/align_result.root --plotsdir=${thisdir}/${plotsdir} --config=${config}
 
+
+    #exit 0
+    
     cd ${thisdir}/${plotsdir}
     ~/alignment/validation/validation ../cfg/validation.cfg
     
@@ -84,7 +94,7 @@ do
     cp new.txt ${thisdir}/vars/dev${i}_bmt.txt
     #SVT
     ccdb dump /geometry/cvt/svt/layeralignment -v $prev -r 11 | grep -v '#' > prev.txt
-    ./TableUtil --in=${result_file} --old=prev.txt --new=new.txt --config=$config --mergeTB --detector=SVT
+    ./TableUtil --in=${result_file} --old=prev.txt --new=new.txt --config=$config $tableUtilOpt --detector=SVT
     ccdb add /geometry/cvt/svt/layeralignment new.txt -v dev${i} -r 11-11
     cp new.txt ${thisdir}/vars/dev${i}_svt.txt
     #set the variation for the next iteration
