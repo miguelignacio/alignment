@@ -75,7 +75,7 @@ do
     
     cd ../../../cvt_plots/; #make clean; make
     ./CVTPlotsPost --in=${thisdir}/${plotsdir}/align_result.root --plotsdir=${thisdir}/${plotsdir} --config=${config}
-
+    ./CompareBeforeAfter --before=${thisdir}/plots_pass_1/prealign.root --after=${thisdir}/${plotsdir}/prealign.root --plotsdir=${thisdir}/${plotsdir}
 
     #exit 0
     
@@ -92,11 +92,14 @@ do
     ./TableUtil --in=${result_file} --old=prev.txt --new=new.txt --config=$config --detector=BMT
     ccdb add /geometry/cvt/mvt/alignment new.txt -v dev${i} -r 11-11
     cp new.txt ${thisdir}/vars/dev${i}_bmt.txt
+    cp new.txt ${thisdir}/${plotsdir}/dev${i}_bmt.txt
+    
     #SVT
     ccdb dump /geometry/cvt/svt/layeralignment -v $prev -r 11 | grep -v '#' > prev.txt
     ./TableUtil --in=${result_file} --old=prev.txt --new=new.txt --config=$config $tableUtilOpt --detector=SVT
     ccdb add /geometry/cvt/svt/layeralignment new.txt -v dev${i} -r 11-11
     cp new.txt ${thisdir}/vars/dev${i}_svt.txt
+    cp new.txt ${thisdir}/${plotsdir}/dev${i}_svt.txt
     #set the variation for the next iteration
     cd ${thisdir};
     set_variation dev${i}
