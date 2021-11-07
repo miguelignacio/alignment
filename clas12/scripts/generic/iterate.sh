@@ -70,8 +70,15 @@ do
     ./CVTPlotsPre --in=${thisdir}/${plotsdir}/prealign.root --plotsdir=${thisdir}/${plotsdir} -l $label
     
     cd ${thisdir}/${plotsdir}
-    
-    ../../../../kfa/align ../cfg/$align_cfg
+
+    #to allow different cfg files at different iterations,
+    # specify it by having ITER in the ${align_cfg} environmental
+    # variable.  For instance blah_ITER.cfg.
+    #  Then name the cfg files for each iteration
+    # as follows:  cfg/blah_1.cfg cfg/blah_2.cfg, etc.
+    # this can be useful if tightening the initial errors for every iteration
+    align_cfg_i=`echo $align_cfg | sed 's/ITER/'${i}'/g'`
+    ../../../../kfa/align ../cfg/$align_cfg_i
     
     cd ../../../cvt_plots/; #make clean; make
     ./CVTPlotsPost --in=${thisdir}/${plotsdir}/align_result.root --plotsdir=${thisdir}/${plotsdir} --config=${config}
