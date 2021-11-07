@@ -31,13 +31,96 @@
 #include "TTree.h"
 #include "TFile.h"
 #include "TProfile.h"
+#include "TGraphErrors.h"
+
 
 using namespace std;
 
 double dmin=-2,dmax = 2;
 double phimin=-TMath::Pi(), phimax = TMath::Pi();
 double tandipmin= -1,tandipmax =1.5;
-double zmin=-80, zmax =10;
+double zmin=-70, zmax =10;
+TString plotsDir ="";
+
+TF1* g = new TF1("gaus","gaus", -.1,.1);
+double getSigma(TH1* h){
+  double mu = h->GetMean();
+  double sigma = h->GetStdDev();
+  
+  double minfit = mu-2*sigma;
+  double maxfit = mu+2*sigma;
+  g->SetParameter("Mean", mu);
+  g->SetParameter("Sigma", sigma);
+  h->Fit(g, "N", "", minfit, maxfit);
+  mu = g->GetParameter("Mean");
+  sigma = g->GetParameter("Sigma");
+  return sigma;
+}
+TGraphErrors* createProfile(TH2D * h, int color, int markerstyle, double shift,double ywindow=1.5){
+  
+  int n =h->GetXaxis()->GetNbins();
+  double x[n];
+  double y[n];
+  double ex[n];
+  double ey[n];
+
+  double largestMu = 0;
+  double largestMuError = 0;
+  double chi2 = 0;
+  for(int i = 0; i<n;i++){
+    TH1* proj = h->ProjectionY("temp", i,i+1);
+    double mu = proj->GetMean();
+    //double dmu = proj->GetMeanError();
+    double sigma = proj->GetStdDev();
+    
+    double minfit = mu-2*sigma;
+    double maxfit = mu+2*sigma;
+    g->SetParameter("Mean", mu);
+    g->SetParameter("Sigma", sigma);
+    proj->Fit(g, "NQ", "", minfit, maxfit);
+    mu = g->GetParameter("Mean");
+    sigma = g->GetParameter("Sigma");
+    double dmu = g->GetParError(1);
+    if(sigma>5){
+      mu = proj->GetMean();
+      sigma = proj->GetStdDev();
+      //proj->Draw();
+      //gPad->SaveAs(plotsDir+ "/error.pdf");
+      
+    }
+    x[i] = h->GetXaxis()->GetBinCenter(i+1)+shift;
+    ex[i] = 0;
+    y[i] = mu;
+    ey[i] = sigma;
+    if(abs(mu)>largestMu){
+      largestMu = abs(mu);
+      largestMuError = dmu;
+      
+    }
+    chi2+=mu*mu/(dmu*dmu);
+  }
+  
+  TGraphErrors * profile = new TGraphErrors(n, x, y, ex, ey);
+  profile->SetMarkerStyle(markerstyle);
+//profile->SetMarkerSize(1);
+  profile->SetMarkerColor(color);
+  profile->SetLineColor(color);
+  profile->SetLineStyle(0);
+  profile->GetXaxis()->SetRangeUser(h->GetXaxis()->GetXmin(), h->GetXaxis()->GetXmax());
+  profile->SetTitle(h->GetTitle());
+  profile->GetXaxis()->SetTitle(h->GetXaxis()->GetTitle());
+  profile->GetYaxis()->SetTitle(h->GetYaxis()->GetTitle());
+  profile->GetYaxis()->SetTitleOffset(h->GetYaxis()->GetTitleOffset());
+  
+  profile->GetHistogram()->SetMaximum(ywindow);   // along
+  profile->GetHistogram()->SetMinimum(-ywindow);  //   Y
+  
+  cout << h->GetName() << " worst mu: " << largestMu << "+-"<< largestMuError << endl;
+  cout << h->GetName() << " chi2: " << chi2 << endl;
+  return profile;
+//return h->ProfileX(h->GetName()+(TString&)"_prof");
+  
+}
 
 int main(int argc, char * argv[]) {
   // Record start time
@@ -45,7 +128,7 @@ int main(int argc, char * argv[]) {
   
   TString inputFileNameBefore;
   TString inputFileNameAfter;
-  TString plotsDir;
+  //TString plotsDir;
 
   double maxResid=5;
   vector<TString> inputFiles;
@@ -89,12 +172,13 @@ int main(int argc, char * argv[]) {
   TCanvas* c3 = new TCanvas("c3","c3",1200,1600);
   c3->Divide(3,4);
   
-  TLegend* legend1 = new TLegend(0.15, 0.7, 0.70, 0.9);
-  TLegend* legend2 = new TLegend(0.15, 0.7, 0.70, 0.9);
-  TLegend* legend3 = new TLegend(0.15, 0.7, 0.70, 0.9);
+  TLegend* legend1 = new TLegend(0.15, 0.7, 0.90, 0.9);
+  TLegend* legend2 = new TLegend(0.15, 0.7, 0.90, 0.9);
+  TLegend* legend3 = new TLegend(0.15, 0.7, 0.90, 0.9);
   TLegend* legend4 = new TLegend(0.15, 0.7, 0.70, 0.9);
   
   TLegend* legend5 = new TLegend(0.075, 0.75, 0.40, 0.9);
+  TLegend* legend6 = new TLegend(0.15, 0.70, 0.70, 0.9);
   
   
   
@@ -117,17 +201,19 @@ int main(int argc, char * argv[]) {
     
     TH1F*  hchi2ndof = new TH1F("hchi2ndof"+suffix, "track #chi^{2}/ndof;track #chi^{2}/n_{dof};# of events", 100, 0, 20);
     
-    TH1F* residuals_svt = new TH1F ("res_svt"+suffix, "SVT residuals;residual [mm];# of clusters", 100, -1.5, 1.5);
-    TH1F* residuals_bmtz = new TH1F ("res_bmtz"+suffix, "BMTZ residuals;residual [mm];# of clusters", 100, -3, 3);
-    TH1F* residuals_bmtc = new TH1F ("res_bmtc"+suffix, "BMTC residuals;residual [mm];# of clusters", 100, -3, 3);
+    TH1F* residuals_svt = new TH1F ("res_svt"+suffix, "SVT residuals;residual [mm];# of clusters", 100, -0.5, 0.5);
+    TH1F* residuals_bmtz = new TH1F ("res_bmtz"+suffix, "BMTZ residuals;residual [mm];# of clusters", 100, -1.5, 1.5);
+    TH1F* residuals_bmtc = new TH1F ("res_bmtc"+suffix, "BMTC residuals;residual [mm];# of clusters", 100, -1.5, 1.5);
     
     //shift the "before" by a fraction of a bin for clarity
     double shift_module = -(1.-before_after)*1./5;
-    
-    TProfile* residuals_vs_module =  new TProfile ("res_mod_"+suffix, "Residuals (all modules);module # ;residual [mm]", 102, 0+shift_module, 102+shift_module);
+
+    #define RESID_BINS 100, -3,3
+    TH2D* residuals_vs_module =  new TH2D ("res_mod_"+suffix, "Residuals (all modules);module # ;residual [mm]", 102, 0+shift_module, 102+shift_module,
+                                           RESID_BINS);
     
     //sets the error bar to be the std dev, instead of standard error on the mean
-    residuals_vs_module->SetErrorOption("s");
+    //residuals_vs_module->SetErrorOption("s");
     
     int color = before_after ? kBlack: kRed;
      residuals_svt->SetLineColor(color);
@@ -149,7 +235,7 @@ int main(int argc, char * argv[]) {
     
     
     //number of bins for the residuals vs kinematics plots.
-    int nbins_kin = 20;
+    int nbins_kin = 15;
     //shift the "before" markers by a 5th of a bin for visual clarity
     double shift_d  = -(1.-before_after)*(dmax-dmin)/nbins_kin/5;
     double shift_phi  = -(1.-before_after)*(phimax-phimin)/nbins_kin/5;
@@ -159,28 +245,23 @@ int main(int argc, char * argv[]) {
     
     
     
-    TProfile* residuals_vs_phi_svt = new  TProfile ("res_phi_svt"+suffix, "SVT residuals vs #phi;#phi [rad];residual [mm]", nbins_kin,phimin+shift_phi, phimax+shift_phi);
-    TProfile* residuals_vs_d0_svt =  new TProfile ("res_d0_svt"+suffix, "SVT residuals vs d_{0};d_{0} [mm]; residual [mm]", nbins_kin, dmin+shift_d, dmax+shift_d);
-    TProfile* residuals_vs_theta_svt =  new TProfile ("res_theta_svt"+suffix, "SVT residuals vs tan#theta_{dip};tan#theta_{dip};residual [mm]", nbins_kin, tandipmin+shift_tandip, tandipmax+shift_tandip);
-    TProfile* residuals_vs_z_svt =  new TProfile ("res_z_svt"+suffix, "SVT residuals vs z;z [mm];residual [mm]", nbins_kin, zmin+shift_z, zmax+shift_z);
+    TH2D* residuals_vs_phi_svt = new  TH2D ("res_phi_svt"+suffix, "SVT residuals vs #phi_{0};#phi_{0} [rad];residual [mm]", nbins_kin,phimin, phimax, RESID_BINS);
+    TH2D* residuals_vs_d0_svt =  new TH2D ("res_d0_svt"+suffix, "SVT residuals vs d_{0};d_{0} [mm]; residual [mm]", nbins_kin, dmin, dmax, RESID_BINS);
+    TH2D* residuals_vs_theta_svt =  new TH2D ("res_theta_svt"+suffix, "SVT residuals vs t_{0};t_{0};residual [mm]", nbins_kin, tandipmin, tandipmax, RESID_BINS);
+    TH2D* residuals_vs_z_svt =  new TH2D ("res_z_svt"+suffix, "SVT residuals vs z_{0};z_{0} [mm];residual [mm]", nbins_kin, zmin, zmax, RESID_BINS);
     
-    TProfile* residuals_vs_phi_bmtz = new  TProfile ("res_phi_bmtz"+suffix, "BMTZ residuals vs #phi;#phi [rad];residual [mm]", nbins_kin, phimin+shift_phi,phimax+shift_phi);
-    TProfile* residuals_vs_d0_bmtz = new  TProfile ("res_d0_bmtz"+suffix, "BMTZ residuals vs d_{0};d_{0} [mm]; residual [mm]", nbins_kin, dmin+shift_d, dmax+shift_d);
-    TProfile* residuals_vs_theta_bmtz = new  TProfile ("res_theta_bmtz"+suffix, "BMTZ residuals vs tan#theta_{dip};tan#theta_{dip};residual [mm]", nbins_kin, tandipmin+shift_tandip, tandipmax+shift_tandip);
-    TProfile* residuals_vs_z_bmtz =  new TProfile ("res_z_bmtz"+suffix, "BMTZ residuals vs z;z [mm];residual [mm]", nbins_kin, zmin+shift_z, zmax+shift_z);
+    TH2D* residuals_vs_phi_bmtz = new  TH2D ("res_phi_bmtz"+suffix, "BMTZ residuals vs #phi_{0};#phi_{0} [rad];residual [mm]", nbins_kin, phimin,phimax, RESID_BINS);
+    TH2D* residuals_vs_d0_bmtz = new  TH2D ("res_d0_bmtz"+suffix, "BMTZ residuals vs d_{0};d_{0} [mm]; residual [mm]", nbins_kin, dmin, dmax, RESID_BINS);
+    TH2D* residuals_vs_theta_bmtz = new  TH2D ("res_theta_bmtz"+suffix, "BMTZ residuals vs t_{0};t_{0};residual [mm]", nbins_kin, tandipmin, tandipmax, RESID_BINS);
+    TH2D* residuals_vs_z_bmtz =  new TH2D ("res_z_bmtz"+suffix, "BMTZ residuals vs z_{0};z_{0} [mm];residual [mm]", nbins_kin, zmin, zmax, RESID_BINS);
     
-    TProfile* residuals_vs_phi_bmtc = new  TProfile ("res_phi_bmtc"+suffix, "BMTC residuals vs #phi;#phi [rad];residual [mm]", nbins_kin, phimin+shift_phi, phimax+shift_phi);
-    TProfile* residuals_vs_d0_bmtc =  new TProfile ("res_d0_bmtc"+suffix, "BMTC residuals vs d_{0};d_{0} [mm]; residual [mm]", nbins_kin, dmin+shift_d, dmax+shift_d);
-    TProfile* residuals_vs_theta_bmtc =  new TProfile ("res_theta_bmtc"+suffix, "BMTC residuals vs tan#theta_{dip};tan#theta_{dip};residual [mm]", nbins_kin, tandipmin+shift_tandip, tandipmax+shift_tandip);
-    TProfile* residuals_vs_z_bmtc =  new TProfile ("res_z_bmtc"+suffix, "BMTC residuals vs z;z [mm];residual [mm]", nbins_kin, zmin+shift_z, zmax+shift_z);
+    TH2D* residuals_vs_phi_bmtc = new  TH2D ("res_phi_bmtc"+suffix, "BMTC residuals vs #phi_{0};#phi_{0} [rad];residual [mm]", nbins_kin, phimin, phimax,RESID_BINS);
+    TH2D* residuals_vs_d0_bmtc =  new TH2D ("res_d0_bmtc"+suffix, "BMTC residuals vs d_{0};d_{0} [mm]; residual [mm]", nbins_kin, dmin, dmax, RESID_BINS);
+    TH2D* residuals_vs_theta_bmtc =  new TH2D ("res_theta_bmtc"+suffix, "BMTC residuals vs t_{0};t_{0};residual [mm]", nbins_kin, tandipmin, tandipmax, RESID_BINS);
+    TH2D* residuals_vs_z_bmtc =  new TH2D ("res_z_bmtc"+suffix, "BMTC residuals vs z_{0};z_{0} [mm];residual [mm]", nbins_kin, zmin, zmax, RESID_BINS);
     
-#define format_profile(profile,min,max) \
-    profile->SetMarkerStyle(markerstyle);\
-    profile->SetMarkerColor(color);\
-    profile->SetLineColor(color);\
-    profile->SetMinimum(min);\
-    profile->SetMaximum(max);\
-    profile->SetErrorOption("s");
+/*#define format_profile(profile,min,max) \
+    
     
     format_profile(residuals_vs_d0_svt,-0.6,0.6)
     format_profile(residuals_vs_phi_svt,-0.6,0.6)
@@ -194,7 +275,7 @@ int main(int argc, char * argv[]) {
     format_profile(residuals_vs_phi_bmtc,-5,5)
     format_profile(residuals_vs_z_bmtc,-5,5)
     format_profile(residuals_vs_theta_bmtc,-5,5)
-    
+*/
     
     
     cout << "initialized histograms" << endl;
@@ -295,60 +376,68 @@ int main(int argc, char * argv[]) {
     
     TString opt = before_after ? "SAME" : "";
     c1->cd(1);
-    legend1->AddEntry(residuals_svt, Form(suffix + ",\n RMS = %.2f mm",residuals_svt->GetRMS()),"l");
+    legend1->AddEntry(residuals_svt, Form(suffix + ",\n RMS = %.2f mm, fit #sigma = %.3f mm",residuals_svt->GetRMS(), getSigma(residuals_svt)),"l");
     residuals_svt->Draw(opt);
-    residuals_svt->SetMaximum(residuals_svt->GetMaximum()*3);
+    residuals_svt->SetMaximum(residuals_svt->GetMaximum()*4);
     c1->cd(2);
-    legend2->AddEntry(residuals_bmtz, Form(suffix + ",\n RMS = %.2f mm",residuals_bmtz->GetRMS()),"l");
+    legend2->AddEntry(residuals_bmtz, Form(suffix + ",\n RMS = %.2f mm, fit #sigma = %.2f mm",residuals_bmtz->GetRMS(), getSigma(residuals_bmtz)),"l");
     residuals_bmtz->Draw(opt);
-    residuals_bmtz->SetMaximum(residuals_bmtz->GetMaximum()*5);
+    residuals_bmtz->SetMaximum(residuals_bmtz->GetMaximum()*7);
     c1->cd(3);
-    legend3->AddEntry(residuals_bmtc, Form(suffix+ ",\n RMS = %.2f mm",residuals_bmtc->GetRMS()), "l");
+    legend3->AddEntry(residuals_bmtc, Form(suffix+ ",\n RMS = %.2f mm, fit #sigma = %.2f mm",residuals_bmtc->GetRMS(), getSigma(residuals_bmtc)), "l");
     residuals_bmtc->Draw(opt);
-    residuals_bmtc->SetMaximum(residuals_bmtc->GetMaximum()*2);
+    residuals_bmtc->SetMaximum(residuals_bmtc->GetMaximum()*2.4);
     c1->cd(4);
     legend4->AddEntry(hchi2ndof, Form(suffix+", mean = %.1f",hchi2ndof->GetMean()),"l");
     hchi2ndof->SetMaximum(hchi2ndof->GetMaximum()*10);
     hchi2ndof->Draw(opt);
     
+    opt = before_after ? "SP" : "AP";
+    
     TLine* line = new TLine();
     line->SetLineStyle(2);
+    line->SetLineColorAlpha(kBlack,0.5);
     c2->cd();
     residuals_vs_module->GetYaxis()->SetTitleOffset(0.5);
     line->DrawLine(0,0,102,0);
-    residuals_vs_module->SetMinimum(-2);
-    residuals_vs_module->SetMaximum(3);
-    residuals_vs_module->Draw(opt);
+    //residuals_vs_module->SetMinimum(-2);
+    //residuals_vs_module->SetMaximum(3);
+    TGraphErrors* t = createProfile(residuals_vs_module, color, markerstyle, shift_module,1.5);
+    t->GetHistogram()->SetMinimum(-1.25);
+    t->GetHistogram()->SetMaximum(2);
+    t->Draw(opt);
     legend5->AddEntry(residuals_vs_module,suffix, "lp");
     
     
- 
-    c3->cd(1);residuals_vs_d0_svt->Draw(opt);
+    
+    c3->cd(1);TGraphErrors *graph = createProfile(residuals_vs_d0_svt, color, markerstyle, shift_d,0.5);graph->Draw(opt);
+    legend6->AddEntry(graph,suffix, "lp");
     line->DrawLine(dmin,0,dmax,0);
-    c3->cd(4);residuals_vs_phi_svt->Draw(opt);
+    c3->cd(4);createProfile(residuals_vs_phi_svt, color, markerstyle, shift_phi,0.5)->Draw(opt);
     line->DrawLine(phimin,0,phimax,0);
-    c3->cd(7);residuals_vs_z_svt->Draw(opt);
+    c3->cd(7);createProfile(residuals_vs_z_svt, color, markerstyle, shift_z,0.5)->Draw(opt);
     line->DrawLine(zmin,0,zmax,0);
-    c3->cd(10);residuals_vs_theta_svt->Draw(opt);
+    c3->cd(10);createProfile(residuals_vs_theta_svt, color, markerstyle, shift_tandip,0.5)->Draw(opt);
     line->DrawLine(tandipmin,0,tandipmax,0);
     
     
-    c3->cd(2);residuals_vs_d0_bmtz->Draw(opt);
+    c3->cd(2);createProfile(residuals_vs_d0_bmtz, color, markerstyle, shift_d)->Draw(opt);
     line->DrawLine(dmin,0,dmax,0);
-    c3->cd(5);residuals_vs_phi_bmtz->Draw(opt);
+    c3->cd(5);createProfile(residuals_vs_phi_bmtz, color, markerstyle, shift_phi)->Draw(opt);
     line->DrawLine(phimin,0,phimax,0);
-    c3->cd(8);residuals_vs_z_bmtz->Draw(opt);
+    c3->cd(8);createProfile(residuals_vs_z_bmtz, color, markerstyle, shift_z)->Draw(opt);
     line->DrawLine(zmin,0,zmax,0);
-    c3->cd(11);residuals_vs_theta_bmtz->Draw(opt);
+    c3->cd(11);createProfile(residuals_vs_theta_bmtz, color, markerstyle, shift_tandip)->Draw(opt);
     line->DrawLine(zmin,0,zmax,0);
     
-    c3->cd(3);residuals_vs_d0_bmtc->Draw(opt);
+    c3->cd(3);createProfile(residuals_vs_d0_bmtc, color, markerstyle, shift_d)->Draw(opt);
     line->DrawLine(dmin,0,dmax,0);
-    c3->cd(6);residuals_vs_phi_bmtc->Draw(opt);
+    c3->cd(6);createProfile(residuals_vs_phi_bmtc, color, markerstyle, shift_phi)->Draw(opt);
     line->DrawLine(phimin,0,phimax,0);
-    c3->cd(9);residuals_vs_z_bmtc->Draw(opt);
+    c3->cd(9);createProfile(residuals_vs_z_bmtc, color, markerstyle, shift_z)->Draw(opt);
     line->DrawLine(zmin,0,zmax,0);
-    c3->cd(12);residuals_vs_theta_bmtc->Draw(opt);
+    c3->cd(12);createProfile(residuals_vs_theta_bmtc, color, markerstyle, shift_tandip)->Draw(opt);
+    //c3->cd(12);residuals_vs_theta_bmtc->Draw(opt);
     line->DrawLine(tandipmin,0,tandipmax,0);
     
     
@@ -379,7 +468,7 @@ int main(int argc, char * argv[]) {
         line->SetLineWidth(2);
       else
         line->SetLineWidth(1);
-      line->DrawLine(x,-2,x,x <= 84? 3: 2.4);
+      line->DrawLine(x,-1.25,x,x <= 84? 2: 1.8);
     }
     
     TText *text = new TText();
@@ -387,19 +476,19 @@ int main(int argc, char * argv[]) {
     text->DrawText(12, 1, "SVT (inner)");
     text->DrawText(12+42, 1, "SVT (outer)");
     
-    text->DrawText(90, 2.5, "BMT");
+    text->DrawText(90, 1.8, "BMT");
     text->SetTextSize(.04);
     
-    text->DrawText(84+1, 2, "C");
-    text->DrawText(87+1, 2, "Z");
-    text->DrawText(90+1, 2, "Z");
-    text->DrawText(93+1, 2, "C");
-    text->DrawText(96+1, 2, "Z");
-    text->DrawText(99+1, 2, "C");
+    text->DrawText(84+1, 1.5, "C");
+    text->DrawText(87+1, 1.5, "Z");
+    text->DrawText(90+1, 1.5, "Z");
+    text->DrawText(93+1, 1.5, "C");
+    text->DrawText(96+1, 1.5, "Z");
+    text->DrawText(99+1, 1.5, "C");
     
     c2->SaveAs(plotsDir+"/residuals_module." + ext);
     c3->cd(1);
-    legend5->Draw();
+    legend6->Draw();
     c3->SaveAs(plotsDir+"/residuals_kinematics." + ext);
   }
   

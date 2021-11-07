@@ -242,8 +242,9 @@ int main(int argc, char * argv[]) {
     TH1F*  hresiduali = new TH1F(Form("hresidual_bmt_%d",i), "1D position residual BMT;meas - extrap (mm);# of clusters", 100, -maxResid, maxResid);
     residuals_BMT.push_back(hresiduali);
   }
-  
-  TH1F*  hresidual_SVT = new TH1F("hresidual_svt", "1D position residual (all SVT);meas - extrap (mm);# of clusters", 100, -maxResid, maxResid);
+
+  double maxResidSVT=1.5;
+  TH1F*  hresidual_SVT = new TH1F("hresidual_svt", "1D position residual (all SVT);meas - extrap (mm);# of clusters", 100, -maxResidSVT, maxResidSVT);
   
   
   
@@ -463,7 +464,9 @@ int main(int argc, char * argv[]) {
     createPlotXY(halignderiv6mod,"A6","A6 (mm)")->Draw("COLZ1"); drawLabel(label);c->SaveAs(plotsDir+"/A6xy.png");
     gStyle->SetPadRightMargin(.10);
     
+    c->SetLogz();
     hmodulexy->Draw("COLZ1");drawLabel(label);c->SaveAs(plotsDir+"/modulexy.png");
+    c->SetLogz(0);
     
     hmeas->SetTitle("1D hit positions");
     hmeas->Draw();hextrap->SetLineColor(kRed);hextrap->Draw("SAME");

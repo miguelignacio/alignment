@@ -111,6 +111,7 @@ TH2F* createPlotXY(TH1* h, TString title, TString ztitle){
 
 
 int main(int argc, char * argv[]) {
+  gStyle->SetPalette(kViridis);
   // Record start time
   auto start = std::chrono::high_resolution_clock::now();
   
@@ -263,7 +264,7 @@ int main(int argc, char * argv[]) {
     c->SaveAs(plotsDir+"/Ty_xy.pdf");
   }
   if (orderTz >= 0){
-    hparamsy->Draw();
+    hparamsz->Draw();
     c->SaveAs(plotsDir+"/Tz.pdf");
     TH2F* hz_xy = createPlotXY(hparamsz, "translation z", "tz");
     hz_xy->Draw("COLZ");
@@ -382,9 +383,9 @@ int main(int argc, char * argv[]) {
       int colors[] = {kRed,kCyan+1,kYellow+1,kGreen+1,kMagenta,kBlue};
       for (int lay = 0; lay<6; lay++){
         int i = nparams*(3*lay+sec+84)+j;
-        cout << "nparam" << nparams << endl;
+        //cout << "nparam" << nparams << endl;
         TH1* h = (TH1*)inputFile->Get(Form("hAliPar%d",i));
-        cout << "h" << i << endl;
+        //cout << "h" << i << endl;
         
         h->SetTitle(Form("Evolution of %s parameters (BMT sec %d);track #;", param_name,sec));
         h->Draw(lay == 0 ? "": "SAME");
@@ -403,13 +404,63 @@ int main(int argc, char * argv[]) {
         h->GetXaxis()->SetRangeUser(0,last);
       }
       legend->Draw();
-      c->SaveAs(plotsDir+Form("/bmt_params_%s_sec%d.pdf", param_name,sec));
+      //save space by exporting these to png
+      c->SaveAs(plotsDir+Form("/bmt_params_%s_sec%d.png", param_name,sec));
     }
   }
   
-  TLegend* legend = new TLegend(0.75, 0.6,1,0.95);
   
-  /*int colors[] = {kRed,kCyan+1,kYellow+1,kGreen+1,kMagenta,kBlue};
+  TH2* hcorr = new TH2D("correlations","correlations;col;row", C->GetNrows(),0,C->GetNrows(),C->GetNrows(),0,C->GetNrows());
+  TH2* hcorr_bmt = new TH2D("correlations_bmt","correlations (bmt);col;row", C->GetNrows()-84*nparams, 84*nparams,C->GetNrows(),C->GetNrows()-84*nparams,84*nparams,C->GetNrows());
+  hcorr->SetStats(0);
+  //hcorr->SetColorMap(
+  for(int i = 0; i<C->GetNrows(); i++){
+    for(int j = 0; j<C->GetNrows(); j++){
+      auto c = *C;
+      hcorr->SetBinContent(i,j,abs(c(i,j))/sqrt(c(i,i))/sqrt(c(j,j)));
+      hcorr_bmt->SetBinContent(i-84*nparams+1,j-84*nparams+1,abs(c(i,j))/sqrt(c(i,i))/sqrt(c(j,j)));
+    }
+                         
+  }
+  
+  TText* t = new TText();
+  t->SetTextAlign(22);
+  t->SetTextColor(kRed);
+  t->SetTextColorAlpha(kRed,0.5);
+  
+  
+  //c->SetLogz();
+  hcorr->Draw("COLZ");
+  t->SetTextSize(.15);
+  t->DrawText(N*42./102,N*42./102,"SVT");
+  t->SetTextSize(.05);
+  t->DrawText(N*93./102,N*93./102,"BMT");
+  TLine * l = new TLine();
+  l->SetLineColorAlpha(kRed,0.7);
+  l->SetLineStyle(3);
+  l->DrawLine(0, N*84./102, N, N*84./102);
+  l->DrawLine(N*84./102, 0, N*84./102, N);
+  
+  //hopefully this makes each bin exactly 2 pixels
+  c->SetRightMargin(0.10);
+  c->SetLeftMargin(0.10);
+  c->SetTopMargin(0.10);
+  c->SetBottomMargin(0.10);
+  c->SetCanvasSize(N*10/4,N*10/4);
+  c->SaveAs(plotsDir+"/correlations.png");
+  
+  hcorr_bmt->Draw("COLZ");
+  //hopefully this makes each bin exactly 2 pixels
+  c->SetRightMargin(0.10);
+  c->SetLeftMargin(0.10);
+  c->SetTopMargin(0.10);
+  c->SetBottomMargin(0.10);
+  c->SetCanvasSize(N*10/4,N*10/4);
+  c->SaveAs(plotsDir+"/correlations_bmt.png");
+  
+  /*TLegend* legend = new TLegend(0.75, 0.6,1,0.95);
+  
+  int colors[] = {kRed,kCyan+1,kYellow+1,kGreen+1,kMagenta,kBlue};
   for (int j = 0; j<6; j++){
     int i =j+168+36;
     TH1* h = (TH1*)inputFile->Get(Form("hAliPar%d",i));
