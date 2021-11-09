@@ -37,8 +37,16 @@ prev=${initial_var}
 
 mkdir vars
 
-rm -rf plots_pass*
-for i in $(seq 1 $maxiter)
+
+
+# always make sure to set miniter to 1,
+# unless resuming from an earlier iteration
+if [[ -z "${miniter}" ]] ; then miniter=1 ; fi
+if $miniter == 1; then
+    rm -rf plots_pass*
+fi
+
+for i in $(seq $miniter $maxiter)
 do
     
 
@@ -51,16 +59,23 @@ do
 
     set_cosmics false
     cp align.yaml align_zf.yaml #create a copy of the yaml file
-    recon-util -i ${input_file_zf} -o ${thisdir}/${plotsdir}/prealign_zf.hipo -y align_zf.yaml -n $n &
+    if [[ -n "${input_file_zf}" ]]; then
+	recon-util -i ${input_file_zf} -o ${thisdir}/${plotsdir}/prealign_zf.hipo -y align_zf.yaml -n $n &
+    fi
     set_cosmics true
     cp align.yaml align_cosmic.yaml #create a copy of the yaml file
-    recon-util -i ${input_file_cosmics} -o ${thisdir}/${plotsdir}/prealign_cosmics.hipo -y align_cosmic.yaml -n $n &
-
+    if [[ -n "${input_file_cosmics}" ]]; then
+	recon-util -i ${input_file_cosmics} -o ${thisdir}/${plotsdir}/prealign_cosmics.hipo -y align_cosmic.yaml -n $n &
+    fi
     wait
-    hipo-utils -merge -o ${thisdir}/${plotsdir}/prealign.hipo ${thisdir}/${plotsdir}/prealign_zf.hipo ${thisdir}/${plotsdir}/prealign_cosmics.hipo
-    #uncomment one of the following lines when debugging for either the cosmics or field-off tracks.  
-    #cp ${thisdir}/${plotsdir}/prealign_cosmics.hipo ${thisdir}/${plotsdir}/prealign.hipo
-    #cp ${thisdir}/${plotsdir}/prealign_zf.hipo ${thisdir}/${plotsdir}/prealign.hipo
+    if [[ -z "${input_file_zf}" ]]; then
+	cp ${thisdir}/${plotsdir}/prealign_cosmics.hipo ${thisdir}/${plotsdir}/prealign.hipo
+    elif [[ -z "${input_file_cosmics}" ]]; then
+	cp ${thisdir}/${plotsdir}/prealign_zf.hipo ${thisdir}/${plotsdir}/prealign.hipo
+    else
+	hipo-utils -merge -o ${thisdir}/${plotsdir}/prealign.hipo ${thisdir}/${plotsdir}/prealign_zf.hipo ${thisdir}/${plotsdir}/prealign_cosmics.hipo
+    fi
+    
     
     cd ~/alignment/clas12/hipo2root; #make clean Adapter;
     ./Adapter ${thisdir}/${plotsdir}/prealign.hipo --out=${thisdir}/${plotsdir}/prealign.root
