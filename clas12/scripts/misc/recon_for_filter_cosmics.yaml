@@ -1,0 +1,47 @@
+io-services:
+  reader:
+    class: org.jlab.clas.std.services.convertors.HipoToHipoReader
+    name: HipoToHipoReader
+  writer:
+    class: org.jlab.clas.std.services.convertors.HipoToHipoWriter
+    name: HipoToHipoWriter
+services:
+  - class: org.jlab.clas.swimtools.MagFieldsEngine
+    name: MAGFIELDS
+  - class: org.jlab.rec.cvt.services.CVTRecNewKF
+    name: CVT
+  - class: org.jlab.rec.cvt.services.CVTAlignment
+    name: ALIGN
+configuration:
+  io-services:
+    writer:
+      compression: 2
+  services:
+    MAGFIELDS:
+      magfieldSolenoidMap: "Symm_solenoid_r601_phi1_z1201_13June2018.dat"
+      #magfieldSolenoidScale: "0.00001"
+      magfieldTorusMap: Full_torus_r251_phi181_z251_08May2018.dat
+      variation: rga_fall2018
+    CVT:
+      cosmics: "true"
+      svtOnly: "false"
+      variation: "rga_fall2018_svtsurvey"
+      #minHitTimeBMT:  "50"
+      #maxHitTimeBMT:  "380"
+      #minHitTimeSVT:  "34"
+      #maxHitTimeSVT:  "180"
+      #excludeLayers: "7,8,9,10,11,12"
+    ALIGN:
+      variation: "rga_fall2018_svtsurvey"
+      svtOnly: "false"
+      bmtOnly: "false"
+      svtAlignTopBottomSeparately: "true"
+      alignVariables: "Tx Ty"
+      maxDocaCut: "30"
+      cosmics: "true"
+      maxResidualSVT: "1"
+      maxResidualBMTZ: "3.0"
+      maxResidualBMTC: "2.0"
+      debug: "false"
+mime-types:
+  - binary/data-hipo

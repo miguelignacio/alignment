@@ -59,13 +59,22 @@ do
 
     set_cosmics false
     cp align.yaml align_zf.yaml #create a copy of the yaml file
+
+    
+    if [[ -z "$n_zf" ]]; then
+	n_zf=$n
+    fi
+    if [[ -z "$n_cosmics" ]]; then
+        n_cosmics=$n
+    fi
+    
     if [[ -n "${input_file_zf}" ]]; then
-	recon-util -i ${input_file_zf} -o ${thisdir}/${plotsdir}/prealign_zf.hipo -y align_zf.yaml -n $n &
+	recon-util -i ${input_file_zf} -o ${thisdir}/${plotsdir}/prealign_zf.hipo -y align_zf.yaml -n $n_zf &
     fi
     set_cosmics true
     cp align.yaml align_cosmic.yaml #create a copy of the yaml file
     if [[ -n "${input_file_cosmics}" ]]; then
-	recon-util -i ${input_file_cosmics} -o ${thisdir}/${plotsdir}/prealign_cosmics.hipo -y align_cosmic.yaml -n $n &
+	recon-util -i ${input_file_cosmics} -o ${thisdir}/${plotsdir}/prealign_cosmics.hipo -y align_cosmic.yaml -n $n_cosmics &
     fi
     wait
     if [[ -z "${input_file_zf}" ]]; then
