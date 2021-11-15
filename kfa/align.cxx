@@ -27,6 +27,7 @@
 // Utilities (INFO, ...)
 #include "Utilities.h"
 #include "AlignEvent.h"
+#include "CustomConstraints.h"
 
 using namespace std;
 
@@ -240,6 +241,10 @@ void kfa(const char * configFile = "align.cfg", int gLogLevel = 2)
       }
     }
   }
+  //these are customized constraints, specific to a given detector.
+  setCustomConstraints(mEnv, alignmentCovariance);
+  
+  
 
   // Create random map for track loop
   //----------------------------------
