@@ -4,7 +4,7 @@
 # mkw 2005-03-24
 
 # Name of the executable (code has to be in $(PROGRAM).$(ExeSrcSuf))
-PROGRAM       = event
+PROGRAM       = merge
 # Extension for file containing the main program
 ExeSrcSuf     = cxx
 

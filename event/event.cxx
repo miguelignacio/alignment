@@ -47,10 +47,15 @@ int main(int argc, char * argv[])
     cout << "now get entry " << endl;
     t->GetEntry(j);
     cout << "now print" << endl;
+    cout << "measurements" << endl;
     event->GetMeasurements()->Print();
+    cout << "covariance" << endl;
     event->GetMeasuredCovariance()->Print();
+    cout << "track derivatives" << endl;
     event->GetTrackDerivatives()->Print();
+    cout << "alignment derivatives" << endl;
     event->GetAlignmentDerivatives()->Print();
+    cout << "track prediction" << endl;
     event->GetTrackPrediction()->Print();
   }
   f1.Close();
