@@ -17,8 +17,8 @@ ROOTGLIBS    := $(shell root-config --glibs)
 # external includes / libraries
 #CLHEP_DIR = /home/sebouh/CLHEP_install
 #CLHEP_VERSION = 2.4.4.1
-EXTINCDIR     = -I/usr/local/include/ -I$(CLHEP_DIR)/include
-EXTLIBS       = -L$(CLHEP_DIR)/lib -lCLHEP-Matrix-$(CLHEP_VERSION) -lCLHEP-Vector-$(CLHEP_VERSION)
+EXTINCDIR     = -I/usr/local/include/ # -I$(CLHEP_DIR)/include
+EXTLIBS       = #-L$(CLHEP_DIR)/lib # -lCLHEP-Matrix-$(CLHEP_VERSION) -lCLHEP-Vector-$(CLHEP_VERSION)
 
 ######################################################################
 # You should not modify the lines below here

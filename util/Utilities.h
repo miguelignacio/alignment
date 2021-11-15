@@ -15,9 +15,9 @@
 #include "TTree.h"
 
 // CLHEP includes
-#include <CLHEP/Matrix/Vector.h>
-#include <CLHEP/Matrix/Matrix.h>
-#include <CLHEP/Matrix/SymMatrix.h>
+//#include <CLHEP/Matrix/Vector.h>
+//#include <CLHEP/Matrix/Matrix.h>
+//#include <CLHEP/Matrix/SymMatrix.h>
 
 /** \file Utilities.h
  *
@@ -51,26 +51,26 @@ default: std::cout << "DEBUG: " << message << std::endl; } }
 #define THROW(errmsg) throw (std::string( __PRETTY_FUNCTION__ )+std::string(" (file: ")+std::string( __FILE__ )+std::string(", line: ")+std::string( Form("%d", __LINE__) )+std::string(") ")+std::string(errmsg));
 #define CATCH catch (std::string message) { cerr << "EXCEPTION in " << message << std::endl; }
   
-void setXYZ(CLHEP::HepVector & v, double x, double y, double z);
+//void setXYZ(CLHEP::HepVector & v, double x, double y, double z);
 bool equal(const double val1, const double val2, const double precision);
 
 /** Get a submatrix from a large matrix */
-void GetSubMatrix(const CLHEP::HepMatrix & m, int startRow, int startColumn, int endRow, int endColumn, CLHEP::HepMatrix & sub);
-void GetSubMatrix(const CLHEP::HepSymMatrix & m, int startRow, int startColumn, int endRow, int endColumn, CLHEP::HepMatrix & sub);
+//void GetSubMatrix(const CLHEP::HepMatrix & m, int startRow, int startColumn, int endRow, int endColumn, CLHEP::HepMatrix & sub);
+//void GetSubMatrix(const CLHEP::HepSymMatrix & m, int startRow, int startColumn, int endRow, int endColumn, CLHEP::HepMatrix & sub);
 /** Set a submatrix in a large matrix */
-void SetSubMatrix(CLHEP::HepMatrix & m, int startRow, int startColumn, const CLHEP::HepMatrix & sub);
-void SetSubMatrix(CLHEP::HepSymMatrix & m, int startRow, int startColumn, const CLHEP::HepMatrix & sub);
+//void SetSubMatrix(CLHEP::HepMatrix & m, int startRow, int startColumn, const CLHEP::HepMatrix & sub);
+//void SetSubMatrix(CLHEP::HepSymMatrix & m, int startRow, int startColumn, const CLHEP::HepMatrix & sub);
 
 /** Get/set a subvector from a large vector */
-CLHEP::HepVector GetSubVector(const CLHEP::HepVector & v, int start, int end);
-void SetSubVector(CLHEP::HepVector & v, int start, const CLHEP::HepVector & sub);
+//CLHEP::HepVector GetSubVector(const CLHEP::HepVector & v, int start, int end);
+//void SetSubVector(CLHEP::HepVector & v, int start, const CLHEP::HepVector & sub);
 
 //////////////////////////////////////////////////////////////////////
 // Conversion of matrices
 
-void CLHEPtoROOT(const CLHEP::HepMatrix & oldM, TMatrixD * newM);
-void CLHEPtoROOT(const CLHEP::HepSymMatrix & oldM, TMatrixDSym * newM);
-void CLHEPtoROOT(const CLHEP::HepVector & oldV, TVectorD * newV);
+//void CLHEPtoROOT(const CLHEP::HepMatrix & oldM, TMatrixD * newM);
+//void CLHEPtoROOT(const CLHEP::HepSymMatrix & oldM, TMatrixDSym * newM);
+//void CLHEPtoROOT(const CLHEP::HepVector & oldV, TVectorD * newV);
 
 //////////////////////////////////////////////////////////////////////
 // Find objects from ROOT files

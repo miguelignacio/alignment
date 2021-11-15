@@ -1,6 +1,8 @@
 #ifndef _Detector_h
 #define _Detector_h
 
+#include "SimUtils.h"
+
 // STL includes
 #include <vector>
 

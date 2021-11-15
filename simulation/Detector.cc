@@ -202,3 +202,4 @@ void Detector::ResetDet(int moduleID)
   fTrueMisalignment[offset+4] = 0;
   fTrueMisalignment[offset+5] = 0;
 }
+

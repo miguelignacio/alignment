@@ -11,8 +11,8 @@
 #ROOTSYS='/usr'
 #ROOTSYS='/Applications/root/build'
 import os;
-CLHEP_VERSION=os.environ['CLHEP_VERSION']
-CLHEP_DIR=os.environ['CLHEP_DIR']
+
+
 ROOTSYS=os.environ['ROOTSYS']
 
 ######################################################################
@@ -33,17 +33,28 @@ env.MergeFlags('!' + ROOTSYS + '/bin/root-config --libs --glibs --cflags')
 #env.MergeFlags('-lX3d -lRGL')
 env.MergeFlags('-lRGL')
 
-# setup CLHEP includes and libs
-env.MergeFlags('-I'+CLHEP_DIR+'/include'
-               + ' -L' +CLHEP_DIR+'/lib'
-               + ' -lCLHEP-Matrix-'+CLHEP_VERSION
-               + ' -lCLHEP-Vector-'+CLHEP_VERSION)
+
 # setup local needs
 env.MergeFlags('-I#event -L#event -I#util -L#util -lAlignEvent -lUtilities')
 
 # list other scons files (hierarchical setup)
 #SConscript(['event/SConscript'], exports='env')
 #SConscript(['util/SConscript'], exports='env')
-SConscript(['simulation/SConscript'], exports='env')
 SConscript(['kfa/SConscript'], exports='env')
 SConscript(['validation/SConscript'], exports='env')
+if 'CLHEP_VERSION' not in os.environ.keys():
+   print("environmental variable CLHEP_VERSION not found.  CLHEP is needed for simulations.  "+\
+   	    "If you don't need to simulate events, you don't need to install CLHEP.  Exiting")
+   exit()
+if 'CLHEP_DIR' not in os.environ.keys():
+   print("environmental variable CLHEP_VERSION	not found.  CLHEP is needed for simulations.  "+\
+   	    "If you don't need to simulate events, you don't need to install CLHEP.  Exiting")
+   exit()
+CLHEP_VERSION=os.environ['CLHEP_VERSION']
+CLHEP_DIR=os.environ['CLHEP_DIR']
+# setup CLHEP includes and libs
+env.MergeFlags('-I'+CLHEP_DIR+'/include'
+               + ' -L' +CLHEP_DIR+'/lib'
+               + ' -lCLHEP-Matrix-'+CLHEP_VERSION
+               + ' -lCLHEP-Vector-'+CLHEP_VERSION)
+SConscript(['simulation/SConscript'], exports='env')
