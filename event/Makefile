@@ -56,7 +56,7 @@ DATE	     := $(shell date "+%F")
 ######################################################################
 # default targets
 
-all:            $(PROGRAM)
+all:            $(SO)
 
 clean:
 		@rm -f $(OBJECTS) $(MAINOBJECTS) $(PROGRAM) $(SO) $(DICT).* $(DEPENDS)
