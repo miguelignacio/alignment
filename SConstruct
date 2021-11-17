@@ -29,6 +29,8 @@ env = Environment(CCFLAGS = '-O2', # -pg for gprof
 
 # retrieve standard libraries and options from ROOT
 env.MergeFlags('!' + ROOTSYS + '/bin/root-config --libs --glibs --cflags')
+# add this library to appease the compiler
+env.MergeFlags('-ltbb')
 # add extra libraries for 3D Visualization
 #env.MergeFlags('-lX3d -lRGL')
 env.MergeFlags('-lRGL')
