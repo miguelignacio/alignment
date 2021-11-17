@@ -24,7 +24,7 @@ import os;
 
 # Setup build environment
 env = Environment(CCFLAGS = '-O2', # -pg for gprof
-                  LINKFLAGS = '-Wl' # -pg for gprof
+                  LINKFLAGS = '-W' # -pg for gprof
                   )
 
 # retrieve standard libraries and options from ROOT
@@ -45,11 +45,11 @@ SConscript(['validation/SConscript'], exports='env')
 buildSim=True
 if 'CLHEP_VERSION' not in os.environ.keys():
    print("environmental variable CLHEP_VERSION not found.  CLHEP is needed for simulations.  "+\
-   	    "If you don't need to simulate events, you don't need to install CLHEP.  Exiting")
+   	    "If you don't need to simulate events, you don't need to install CLHEP.  Skipping simulation")
    buildSim=False
 if 'CLHEP_DIR' not in os.environ.keys():
-   print("environmental variable CLHEP_VERSION	not found.  CLHEP is needed for simulations.  "+\
-   	    "If you don't need to simulate events, you don't need to install CLHEP.  Exiting")
+   print("environmental variable CLHEP_DIR not found.  CLHEP is needed for simulations.  "+\
+   	    "If you don't need to simulate events, you don't need to install CLHEP.  Skipping simulation")
    buildSim=False
 if buildSim:
    CLHEP_VERSION=os.environ['CLHEP_VERSION']
