@@ -42,19 +42,21 @@ env.MergeFlags('-I#event -L#event -I#util -L#util -lAlignEvent -lUtilities')
 #SConscript(['util/SConscript'], exports='env')
 SConscript(['kfa/SConscript'], exports='env')
 SConscript(['validation/SConscript'], exports='env')
+buildSim=True
 if 'CLHEP_VERSION' not in os.environ.keys():
    print("environmental variable CLHEP_VERSION not found.  CLHEP is needed for simulations.  "+\
    	    "If you don't need to simulate events, you don't need to install CLHEP.  Exiting")
-   exit()
+   buildSim=False
 if 'CLHEP_DIR' not in os.environ.keys():
    print("environmental variable CLHEP_VERSION	not found.  CLHEP is needed for simulations.  "+\
    	    "If you don't need to simulate events, you don't need to install CLHEP.  Exiting")
-   exit()
-CLHEP_VERSION=os.environ['CLHEP_VERSION']
-CLHEP_DIR=os.environ['CLHEP_DIR']
-# setup CLHEP includes and libs
-env.MergeFlags('-I'+CLHEP_DIR+'/include'
+   buildSim=False
+if buildSim:
+   CLHEP_VERSION=os.environ['CLHEP_VERSION']
+   CLHEP_DIR=os.environ['CLHEP_DIR']
+   # setup CLHEP includes and libs
+   env.MergeFlags('-I'+CLHEP_DIR+'/include'
                + ' -L' +CLHEP_DIR+'/lib'
                + ' -lCLHEP-Matrix-'+CLHEP_VERSION
                + ' -lCLHEP-Vector-'+CLHEP_VERSION)
-SConscript(['simulation/SConscript'], exports='env')
+   SConscript(['simulation/SConscript'], exports='env')
