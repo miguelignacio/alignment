@@ -91,7 +91,7 @@ do
 
     #pre-alignment plots
     cd ../cvt_plots/; #make clean; make
-    ./CVTPlotsPre --in=${thisdir}/${plotsdir}/prealign.root --plotsdir=${thisdir}/${plotsdir} -l $label
+    ./CVTPlotsPre --in=${thisdir}/${plotsdir}/prealign.root --plotsdir=${thisdir}/${plotsdir} -l $label &
     
     cd ${thisdir}/${plotsdir}
 
@@ -102,16 +102,20 @@ do
     # as follows:  cfg/blah_1.cfg cfg/blah_2.cfg, etc.
     # this can be useful if tightening the initial errors for every iteration
     align_cfg_i=`echo $align_cfg | sed 's/ITER/'${i}'/g'`
-    ../../../../kfa/align ../cfg/$align_cfg_i
+    ../../../../kfa/align ../cfg/$align_cfg_i &
+
+    wait #multi-thread creating prealignment plots and running KAA.  
     
     cd ../../../cvt_plots/; #make clean; make
-    ./CVTPlotsPost --in=${thisdir}/${plotsdir}/align_result.root --plotsdir=${thisdir}/${plotsdir} --config=${config}
-    ./CompareBeforeAfter --before=${thisdir}/plots_pass_1/prealign.root --after=${thisdir}/${plotsdir}/prealign.root --plotsdir=${thisdir}/${plotsdir}
+    ./CVTPlotsPost --in=${thisdir}/${plotsdir}/align_result.root --plotsdir=${thisdir}/${plotsdir} --config=${config} &
+    ./CompareBeforeAfter --before=${thisdir}/plots_pass_1/prealign.root --after=${thisdir}/${plotsdir}/prealign.root --plotsdir=${thisdir}/${plotsdir} &
 
     #exit 0
     
     cd ${thisdir}/${plotsdir}
-    ~/alignment/validation/validation ../cfg/validation.cfg
+    ~/alignment/validation/validation ../cfg/validation.cfg &
+
+    wait #run validation, post-alignment plots, and comparison plots simultaneously
     
     #this is this kfa result file name (according to run_recon_kfa.sh)
     result_file=${thisdir}/plots_pass_${i}/align_result.root
