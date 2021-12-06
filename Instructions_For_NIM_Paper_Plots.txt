@@ -1,0 +1,23 @@
+PART 1:  Installing all software
+
+
+1)  Install the clas12-offline-software package which contains the code for reconstructing CLAS12 data.  This may take a while to run, so start this first, and proceed with tasks 2-3
+cd ~
+git clone https://github.com/JeffersonLab/clas12-offline-software.git
+cd clas12-offline-software
+git checkout dev-align3  #special branch in which the recon includes additional output needed for alignment
+./build-coatjava.sh
+2) Add the following line to your ~/.bashrc file:
+export PATH=$PATH:$HOME/clas12-offline-software/coatjava/bin
+3)  Follow the README in the alignment project for instructions to compile the KAA software.  It is unnecesary to install CLHEP, since it is only used by the the builtin "simulation" subpackage, which is not necessary for this project.
+4) After step 1 is complete, compile the clas12-specific programs.  These convert hipo files from the recon output 
+cd clas12
+./compile_clas12_cvt_utils.sh
+
+PART 2:  Get the required data
+
+PART 3:  Run iteration process:
+cd clas12/scripts/generic/
+# edit the following file to make sure all of the file locations are correct
+# for the input files and the ccdb file.
+./iterate_fromStart_30k.sh 
