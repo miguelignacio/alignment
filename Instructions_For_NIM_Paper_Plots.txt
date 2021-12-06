@@ -1,3 +1,6 @@
+Instructions for creating the plots for the NIM paper
+
+
 PART 1:  Installing all software
 
 
@@ -20,4 +23,7 @@ PART 3:  Run iteration process:
 cd clas12/scripts/generic/
 # edit the following file to make sure all of the file locations are correct
 # for the input files and the ccdb file.
-./iterate_fromStart_30k.sh 
+./iterate_fromStart_30k.sh
+#this will create folders plot_pass_#, which will contain the root and hipo output files, as well as diagnostic plots for each pass.
+
+
