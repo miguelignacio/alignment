@@ -37,11 +37,12 @@ configuration:
       bmtOnly: "false"
       svtAlignTopBottomSeparately: "true"
       alignVariables: "Tx Ty Rx Ry Rz"
-      maxDocaCut: "100"
+      #maxDocaCut: "100"
       cosmics: "false"
-      maxResidualSVT: "100"
-      maxResidualBMTZ: "100"
-      maxResidualBMTC: "100"
+      maxResidualSVT: "2"
+      maxResidualBMTZ: "7"
+      maxResidualBMTC: "7"
       debug: "false"
+      useBeamspot: "false"
 mime-types:
   - binary/data-hipo

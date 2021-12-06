@@ -42,6 +42,9 @@ mkdir vars
 # always make sure to set miniter to 1,
 # unless resuming from an earlier iteration
 if [[ -z "${miniter}" ]] ; then miniter=1 ; fi
+
+if [[ -z "${var_prefix}" ]] ; then var_prefix=dev ; fi
+
 if $miniter == 1; then
     rm -rf plots_pass*
 fi
@@ -87,12 +90,20 @@ do
     
     
     cd ~/alignment/clas12/hipo2root; #make clean Adapter;
-    ./Adapter ${thisdir}/${plotsdir}/prealign.hipo --out=${thisdir}/${plotsdir}/prealign.root
+    ./Adapter ${thisdir}/${plotsdir}/prealign.hipo --out=${thisdir}/${plotsdir}/prealign.root &
 
+    ./Adapter ${thisdir}/${plotsdir}/prealign_zf.hipo --out=${thisdir}/${plotsdir}/prealign_zf.root &
+    ./Adapter ${thisdir}/${plotsdir}/prealign_cosmics.hipo --out=${thisdir}/${plotsdir}/prealign_cosmics.root &
+    wait
+    
     #pre-alignment plots
     cd ../cvt_plots/; #make clean; make
+    mkdir ${thisdir}/${plotsdir}/cosmics
+    mkdir ${thisdir}/${plotsdir}/fieldoff
     ./CVTPlotsPre --in=${thisdir}/${plotsdir}/prealign.root --plotsdir=${thisdir}/${plotsdir} -l $label &
-    
+    ./CVTPlotsPre --in=${thisdir}/${plotsdir}/prealign_cosmics.root --plotsdir=${thisdir}/${plotsdir}/cosmics -l ${label}_cosmics &
+    ./CVTPlotsPre --in=${thisdir}/${plotsdir}/prealign_zf.root --plotsdir=${thisdir}/${plotsdir}/fieldoff -l ${label}_fieldoff &
+
     cd ${thisdir}/${plotsdir}
 
     #to allow different cfg files at different iterations,
@@ -109,7 +120,8 @@ do
     cd ../../../cvt_plots/; #make clean; make
     ./CVTPlotsPost --in=${thisdir}/${plotsdir}/align_result.root --plotsdir=${thisdir}/${plotsdir} --config=${config} &
     ./CompareBeforeAfter --before=${thisdir}/plots_pass_1/prealign.root --after=${thisdir}/${plotsdir}/prealign.root --plotsdir=${thisdir}/${plotsdir} &
-
+    ./CompareBeforeAfter --before=${thisdir}/plots_pass_1/prealign_zf.root --after=${thisdir}/${plotsdir}/prealign_zf.root --plotsdir=${thisdir}/${plotsdir}/fieldoff &
+    ./CompareBeforeAfter --before=${thisdir}/plots_pass_1/prealign_cosmics.root --after=${thisdir}/${plotsdir}/prealign_cosmics.root --plotsdir=${thisdir}/${plotsdir}/cosmics &
     #exit 0
     
     cd ${thisdir}/${plotsdir}
@@ -121,23 +133,26 @@ do
     result_file=${thisdir}/plots_pass_${i}/align_result.root
     
     cd ${thisdir}; cd ../../table/
-    ccdb mkvar dev${i} -p ${prev}
+    #ccdb rm -v ${var_prefix}${i}
+    ccdb mkvar ${var_prefix}${i} -p ${prev}
     #BMT
     ccdb dump /geometry/cvt/mvt/alignment -v $prev -r 11 | grep -v '#' > prev.txt
+    rm new.txt
     ./TableUtil --in=${result_file} --old=prev.txt --new=new.txt --config=$config --detector=BMT
-    ccdb add /geometry/cvt/mvt/alignment new.txt -v dev${i} -r 11-11
-    cp new.txt ${thisdir}/vars/dev${i}_bmt.txt
-    cp new.txt ${thisdir}/${plotsdir}/dev${i}_bmt.txt
+    ccdb add /geometry/cvt/mvt/alignment new.txt -v ${var_prefix}${i} -r 11-11
+    cp new.txt ${thisdir}/vars/${var_prefix}${i}_bmt.txt
+    cp new.txt ${thisdir}/${plotsdir}/${var_prefix}${i}_bmt.txt
     
     #SVT
     ccdb dump /geometry/cvt/svt/layeralignment -v $prev -r 11 | grep -v '#' > prev.txt
+    rm new.txt
     ./TableUtil --in=${result_file} --old=prev.txt --new=new.txt --config=$config $tableUtilOpt --detector=SVT
-    ccdb add /geometry/cvt/svt/layeralignment new.txt -v dev${i} -r 11-11
-    cp new.txt ${thisdir}/vars/dev${i}_svt.txt
-    cp new.txt ${thisdir}/${plotsdir}/dev${i}_svt.txt
+    ccdb add /geometry/cvt/svt/layeralignment new.txt -v ${var_prefix}${i} -r 11-11
+    cp new.txt ${thisdir}/vars/${var_prefix}${i}_svt.txt
+    cp new.txt ${thisdir}/${plotsdir}/${var_prefix}${i}_svt.txt
     #set the variation for the next iteration
     cd ${thisdir};
-    set_variation dev${i}
+    set_variation ${var_prefix}${i}
     say "done with iteration" ${i}
-    prev=dev${i}
+    prev=${var_prefix}${i}
 done 
