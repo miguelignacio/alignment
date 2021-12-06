@@ -35,7 +35,7 @@ FCFLAGS       = -I/cern/pro/include -fPIC -fno-automatic -fdollar-ok -fno-backsl
 # -pg for gprof
 
 CXX           = g++
-CXXFLAGS      = -O2 -Wl -fPIC -fsignaling-nans -g # -DNDEBUG # -pg for gprof
+CXXFLAGS      = -O2 -Wall -fPIC -fsignaling-nans -g # -DNDEBUG # -pg for gprof
 CXXFLAGS     += $(EXTINCDIR)   # external header files should be here
 CXXFLAGS     += $(ROOTCFLAGS)
 
@@ -115,7 +115,7 @@ align.test: $(MAINOBJECTS) $(OBJECTS) $(DICT).o
 	$(LD) $(LDFLAGS) $+ -o $@
 
 $(PROGRAM): 	$(SO) $(MAINOBJECTS)
-	$(LD) $(LDFLAGS) $+ -o $@
+	$(LD) $+ $(LDFLAGS) -o $@
 
 $(SO):     $(OBJECTS) $(DICT).o
 		$(LD) $(SOFLAGS) $(LDFLAGS) $+ -o $@
