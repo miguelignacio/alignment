@@ -115,7 +115,7 @@ align.test: $(MAINOBJECTS) $(OBJECTS) $(DICT).o
 	$(LD) $(LDFLAGS) $+ -o $@
 
 $(PROGRAM): 	$(SO) $(MAINOBJECTS)
-	$(LD) $(LDFLAGS) $+ -o $@
+	$(LD) $+ $(LDFLAGS) -o $@
 
 $(SO):     $(OBJECTS) $(DICT).o
 		$(LD) $(SOFLAGS) $(LDFLAGS) $+ -o $@
