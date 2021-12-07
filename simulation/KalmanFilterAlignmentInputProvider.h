@@ -4,6 +4,7 @@
 // CLHEP includes
 #include <CLHEP/Matrix/Vector.h>
 #include <CLHEP/Matrix/Matrix.h>
+#include "SimUtils.h"
 
 // local includes
 #include <AlignEvent.h>

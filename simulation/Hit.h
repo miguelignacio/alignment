@@ -1,6 +1,8 @@
 #ifndef _Hit_h
 #define _Hit_h
 
+#include "SimUtils.h"
+
 // CLHEP includes
 #include <CLHEP/Matrix/Vector.h>
 

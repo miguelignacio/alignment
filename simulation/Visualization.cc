@@ -7,7 +7,7 @@
 
 // ROOT includes
 #include <TCanvas.h>
-#include <TViewerX3D.h>
+//#include <TViewerX3D.h>
 #include <TGLViewer.h>
 #include <TVirtualGL.h>
 #include <TGLOutput.h>

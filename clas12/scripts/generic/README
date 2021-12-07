@@ -1,0 +1,38 @@
+#  the iterate.sh script runs multiple iterations of the following cycle:
+
+#  1) CLAS-12 CVT reconstruction and matrix extraction (for KAA input)
+#  2) Creating plots relating to the input for the KAA (created with alignment/clas12/cvt_plots/CVTPlotsPre)
+#  3) Running KAA
+#  4) Creating plots corresponding to the output of the KAA (created with alignment/clas12/cvt_plots/CVTPlotsPost)
+#  5) Run KAA's validation
+#  6) Update the CCDB
+
+# use export variableName=value for the following variables before running iterate.sh:
+
+# variables needed for the ccdb:
+# location where the ccdb software is installed
+export CCDB_HOME=/Users/spaul/ccdb
+# username for ccdb
+export CCDB_USER=spaul
+# location of the local sqlite file for the ccdb (preceded by sqlite:///)
+export CCDB_CONNECTION=sqlite:////Users/spaul/clas12/sql/clas12_cvtalign_maxime_05142020_6342.sqlite
+
+#recompile the clas12-offline-software package before running KFA iterations?
+export recompile=false
+#maximum iteration number (ie, number of cycles to run)
+export maxiter=6
+#start KAA iterations with the following initial variation of the calibration constants
+export initial_var=rga_fall2018_svtsurvey
+# which set of alignment variables should be used?  Tx=translations in x, Rx=rotations in x, etc.
+export config=TxTy
+# number of files to use
+export n=1000
+#name of alignment config file (in the cfg folder)
+export align_cfg=align_bmtz_TxTy.cfg
+# input file for field-off tracks from the target
+export input_file_zf=/Users/spaul/alignment/clas12/scripts/misc/filtered.hipo
+# input file for cosmic tracks (this will be added to the script later).
+export input_file_cosmics=/Users/spaul/alignment/clas12/scripts/misc/filtered_cosmics.hipo
+
+# now you can run the iterate.sh script!  
+./iterate.sh
