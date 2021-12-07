@@ -139,7 +139,7 @@ do
     ccdb dump /geometry/cvt/mvt/alignment -v $prev -r 11 | grep -v '#' > prev.txt
     rm new.txt
     ./TableUtil --in=${result_file} --old=prev.txt --new=new.txt --config=$config --detector=BMT
-    ccdb add /geometry/cvt/mvt/alignment new.txt -v ${var_prefix}${i} -r 11-11
+    ccdb add /geometry/cvt/mvt/alignment new.txt -v ${var_prefix}${i} -r 11-11 || echo Could not update ccdb.  Exiting
     cp new.txt ${thisdir}/vars/${var_prefix}${i}_bmt.txt
     cp new.txt ${thisdir}/${plotsdir}/${var_prefix}${i}_bmt.txt
     
@@ -147,7 +147,7 @@ do
     ccdb dump /geometry/cvt/svt/layeralignment -v $prev -r 11 | grep -v '#' > prev.txt
     rm new.txt
     ./TableUtil --in=${result_file} --old=prev.txt --new=new.txt --config=$config $tableUtilOpt --detector=SVT
-    ccdb add /geometry/cvt/svt/layeralignment new.txt -v ${var_prefix}${i} -r 11-11
+    ccdb add /geometry/cvt/svt/layeralignment new.txt -v ${var_prefix}${i} -r 11-11 || echo Could not update ccdb. Exiting.
     cp new.txt ${thisdir}/vars/${var_prefix}${i}_svt.txt
     cp new.txt ${thisdir}/${plotsdir}/${var_prefix}${i}_svt.txt
     #set the variation for the next iteration
