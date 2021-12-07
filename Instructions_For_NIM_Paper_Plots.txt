@@ -16,7 +16,7 @@ scp -r scigw.jlab.org:/work/spaul/clas12/input_for_alignment .
 3) Install ccdb, 
 cd ~
 git clone https://github.com/JeffersonLab/ccdb/
-4)  Change the first line of ccdb/bin/ccdb from "#!/usr/bin/env python2" to "#!/usr/bin/env python".   
+4)  Change the first line of ccdb/bin/ccdb from "#!/usr/bin/env python2" to "#!/usr/bin/env python3".   
 5) Add the following lines to your ~/.bashrc file (~/.bash_profile on MacOS), and then run "source ~/.bashrc".
 export PATH=$PATH:$HOME/clas12-offline-software/coatjava/bin:$HOME/ccdb/bin/
 export CCDB_CONNECTION=sqlite:///${HOME}/input_for_alignment/clas12_cvtalign_maxime_05142020_6342.sqlite
