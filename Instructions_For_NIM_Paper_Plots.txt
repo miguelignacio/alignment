@@ -3,27 +3,35 @@ Instructions for creating the plots for the NIM paper
 
 PART 1:  Installing all software
 
-
-1)  Install the clas12-offline-software package which contains the code for reconstructing CLAS12 data.  This may take a while to run, so start this first, and proceed with tasks 2-3
+0)  Make sure that ROOT, Java and python are installed on your computer.
+1)  Install the clas12-offline-software package which contains the code for reconstructing CLAS12 data.  This may take a while to run, so start this first, and proceed with tasks 2-7 while waiting for the clas12-offline-software to compile
 cd ~
 git clone https://github.com/JeffersonLab/clas12-offline-software.git
 cd clas12-offline-software
 git checkout dev-align3  #special branch in which the recon includes additional output needed for alignment
 ./build-coatjava.sh
-2) Add the following line to your ~/.bashrc file:
-export PATH=$PATH:$HOME/clas12-offline-software/coatjava/bin
-3)  Follow the README in the alignment project for instructions to compile the KAA software.  It is unnecesary to install CLHEP, since it is only used by the the builtin "simulation" subpackage, which is not necessary for this project.
-4) After step 1 is complete, compile the clas12-specific programs.  These convert hipo files from the recon output 
-cd clas12
+2) download the input folder:
+cd ~
+scp -r scigw.jlab.org:/work/spaul/clas12/input_for_alignment .
+3) Install ccdb, 
+cd ~
+git clone https://github.com/JeffersonLab/ccdb/
+4)  Change the first line of ccdb/bin/ccdb from "#!/usr/bin/env python2" to "#!/usr/bin/env python".   
+5) Add the following lines to your ~/.bashrc file (~/.bash_profile on MacOS), and then run "source ~/.bashrc".
+export PATH=$PATH:$HOME/clas12-offline-software/coatjava/bin:$HOME/ccdb/bin/
+export CCDB_CONNECTION=sqlite:///${HOME}/input_for_alignment/clas12_cvtalign_maxime_05142020_6342.sqlite
+6)  Add yourself as a user on the ccdb file
+ccdb user --create $USER
+7)  Follow the README in the alignment project for instructions to compile the KAA software.  It is unnecesary to install CLHEP, since it is only used by the the builtin "simulation" subpackage, which is not necessary for this project.
+8) After step 1 is complete, compile the clas12-specific programs.  These utilities include converting hipo files from the recon output to root, parsing the KAA output in order to put new parameters into the ccdb, and creating diagnostic plots.  
+cd alignment/clas12
 ./compile_clas12_cvt_utils.sh
 
-PART 2:  Get the required data
 
-PART 3:  Run iteration process:
+PART 2:  Run iteration process:
 cd clas12/scripts/generic/
-# edit the following file to make sure all of the file locations are correct
-# for the input files and the ccdb file.
-./iterate_fromStart_30k.sh
+# run the following script (this requires that  
+./iterate_plots_for_paper.sh
 #this will create folders plot_pass_#, which will contain the root and hipo output files, as well as diagnostic plots for each pass.
 
 
