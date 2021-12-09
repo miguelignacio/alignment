@@ -30,8 +30,30 @@
 #include "TTree.h"
 #include "TFile.h"
 #include "TProfile.h"
+#include "TGaxis.h"
 
 using namespace std;
+
+void ReverseYAxis (TH1 *h)
+{
+   // Remove the current axis
+   h->GetYaxis()->SetLabelOffset(999);
+   h->GetYaxis()->SetTickLength(0);
+
+   // Redraw the new axis
+   gPad->Update();
+   TGaxis *newaxis = new TGaxis(gPad->GetUxmin(),
+                                gPad->GetUymax(),
+                                gPad->GetUxmin()-0.001,
+                                gPad->GetUymin(),
+                                h->GetYaxis()->GetXmin(),
+                                h->GetYaxis()->GetXmax(),
+                                510,"+");
+   newaxis->SetLabelOffset(-0.03);
+  newaxis->SetLabelSize(h->GetYaxis()->GetLabelSize());
+  newaxis->SetLabelFont(h->GetYaxis()->GetLabelFont());
+   newaxis->Draw();
+}
 
 double angle(double phi){
   double pi = TMath::Pi();
@@ -410,46 +432,72 @@ int main(int argc, char * argv[]) {
   }
   
   
-  TH2* hcorr = new TH2D("correlations","correlations;col;row", C->GetNrows(),0,C->GetNrows(),C->GetNrows(),0,C->GetNrows());
-  TH2* hcorr_bmt = new TH2D("correlations_bmt","correlations (bmt);col;row", C->GetNrows()-84*nparams, 84*nparams,C->GetNrows(),C->GetNrows()-84*nparams,84*nparams,C->GetNrows());
+  int matsize = (18+84)*6;
+  TH2* hcorr = new TH2D("correlations","correlation matrix;column;row", matsize,0,matsize,matsize,0,matsize);
+  TH2* hcorr_bmt = new TH2D("correlations_bmt","correlations (bmt);column;row", matsize-84*nparams, 84*nparams,matsize,matsize-84*nparams,84*nparams,matsize);
   hcorr->SetStats(0);
-  //hcorr->SetColorMap(
-  for(int i = 0; i<C->GetNrows(); i++){
-    for(int j = 0; j<C->GetNrows(); j++){
-      auto c = *C;
-      hcorr->SetBinContent(i,j,abs(c(i,j))/sqrt(c(i,i))/sqrt(c(j,j)));
-      hcorr_bmt->SetBinContent(i-84*nparams+1,j-84*nparams+1,abs(c(i,j))/sqrt(c(i,i))/sqrt(c(j,j)));
+  hcorr->GetZaxis()->SetLabelSize(0.022);
+  hcorr_bmt->SetStats(0);
+  hcorr_bmt->GetZaxis()->SetLabelSize(0.022);
+  hcorr->SetMaximum(1);
+  hcorr->SetMinimum(-1);
+  hcorr_bmt->SetMaximum(1);
+  hcorr_bmt->SetMinimum(-1);
+  auto cc = *C;
+  for(int i = 0; i<matsize; i++){
+    double cii =cc(i,i);
+    for(int j = 0; j<matsize; j++){
+      double cjj = cc(j,j);
+      auto corr = cc(i,j)/sqrt(cii*cjj);
+      hcorr->SetBinContent(1+i,matsize-j,corr);
+      if(i>=84*nparams)
+        hcorr_bmt->SetBinContent(i-84*nparams+1,matsize-j,corr);
     }
                          
   }
+  
   
   TText* t = new TText();
   t->SetTextAlign(22);
   t->SetTextColor(kRed);
   t->SetTextColorAlpha(kRed,0.5);
   
-  
+  // create a color scheme in which black is zero, magenta is positive,
+  // cyan is negative
+  /*int n = 3;
+  double r[3] = {0,0,1};
+  double g[3] = {1,0,0};
+  double b[3] = {1,0,1};
+  double s[3] = {0,0.5,1.0};*/
+  int n = 5;
+  double r[5] = {0.4,0,0,1,1};
+  double g[5] = {1,1,0,0,0.4};
+  double b[5] = {1,1,0,1,1};
+  double s[5] = {0,0.13,0.5,0.87,1.0};
+  TColor::CreateGradientColorTable(n, s, r, g, b, 99);
   //c->SetLogz();
   hcorr->Draw("COLZ");
   t->SetTextSize(.15);
-  t->DrawText(N*42./102,N*42./102,"SVT");
+  t->DrawText(N*42./102,matsize-N*42./102,"SVT");
   t->SetTextSize(.05);
-  t->DrawText(N*93./102,N*93./102,"BMT");
+  t->DrawText(N*93./102,matsize-N*93./102,"BMT");
   TLine * l = new TLine();
-  l->SetLineColorAlpha(kRed,0.7);
+  l->SetLineColorAlpha(kRed,1);
   l->SetLineStyle(3);
-  l->DrawLine(0, N*84./102, N, N*84./102);
-  l->DrawLine(N*84./102, 0, N*84./102, N);
+  l->DrawLine(0, matsize-matsize*84./102, matsize, matsize-matsize*84./102);
+  l->DrawLine(matsize*84./102, 0, matsize*84./102, matsize);
   
   //hopefully this makes each bin exactly 2 pixels
   c->SetRightMargin(0.10);
   c->SetLeftMargin(0.10);
   c->SetTopMargin(0.10);
   c->SetBottomMargin(0.10);
-  c->SetCanvasSize(N*10/4,N*10/4);
+  c->SetCanvasSize(matsize*10/4,matsize*10/4);
+  ReverseYAxis(hcorr);
   c->SaveAs(plotsDir+"/correlations.png");
   
   hcorr_bmt->Draw("COLZ");
+  ReverseYAxis(hcorr_bmt);
   //hopefully this makes each bin exactly 2 pixels
   c->SetRightMargin(0.10);
   c->SetLeftMargin(0.10);

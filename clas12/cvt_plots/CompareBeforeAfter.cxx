@@ -36,7 +36,7 @@
 
 using namespace std;
 
-double dmin=-2,dmax = 2;
+double dmin=-30,dmax = 30;
 double phimin=-TMath::Pi(), phimax = TMath::Pi();
 double tandipmin= -1,tandipmax =1.5;
 double zmin=-70, zmax =10;
@@ -97,6 +97,10 @@ TGraphErrors* createProfile(TH2D * h, int color, int markerstyle, double shift,d
       largestMuError = dmu;
       
     }
+    //for empty or nearly empty bins, hide the marker
+    if(proj->GetEntries()<10){
+      y[i]=100;
+    }
     chi2+=mu*mu/(dmu*dmu);
   }
   
@@ -133,6 +137,7 @@ int main(int argc, char * argv[]) {
   double maxResid=5;
   vector<TString> inputFiles;
   TString label ="";
+  bool isMC = 0;
   for(Int_t i=1;i<argc;i++){
     TString opt=argv[i];
     if((opt.Contains("--before="))){
@@ -150,7 +155,10 @@ int main(int argc, char * argv[]) {
     if (opt.Contains("-l")){
       i++;
       label = argv[i];
-    } 
+    }
+    if (opt == "--isMC"){
+      isMC=1;
+    }
   }
   
 
@@ -162,9 +170,9 @@ int main(int argc, char * argv[]) {
   TCanvas* c1 = new TCanvas("c1","c1",800,800);
   c1->Divide(2,2);
 
-  gStyle->SetPadLeftMargin(.075);
+  gStyle->SetPadLeftMargin(.10);
   gStyle->SetPadRightMargin(.075);
-  TCanvas* c2 = new TCanvas("c2","c2",1200,600);
+  TCanvas* c2 = new TCanvas("c2","c2",1200,900);
   
   gStyle->SetPadLeftMargin(.15);
   gStyle->SetPadRightMargin(.02);
@@ -177,12 +185,15 @@ int main(int argc, char * argv[]) {
   TLegend* legend3 = new TLegend(0.15, 0.7, 0.90, 0.9);
   TLegend* legend4 = new TLegend(0.15, 0.7, 0.70, 0.9);
   
-  TLegend* legend5 = new TLegend(0.075, 0.75, 0.40, 0.9);
+  TLegend* legend5 = new TLegend(0.1, 0.75, 0.40, 0.9);
   TLegend* legend6 = new TLegend(0.15, 0.70, 0.70, 0.9);
   
   
   
   for(int before_after = 0; before_after<2; before_after++){
+    
+    int n_chi2_lt_2 = 0;
+    int n_tracks = 0;
     // auto save every MB
     //AlignTree->SetAutoSave(1000000);
     
@@ -198,8 +209,8 @@ int main(int argc, char * argv[]) {
     }*/
     
     TString suffix = before_after ? "After" : "Before";
-    
-    TH1F*  hchi2ndof = new TH1F("hchi2ndof"+suffix, "track #chi^{2}/ndof;track #chi^{2}/n_{dof};# of events", 100, 0, 20);
+
+    TH1F*  hchi2ndof = new TH1F("hchi2ndof"+suffix, "track #chi^{2}/ndof;track #chi^{2}/n_{dof};# of tracks", 100, 0, 20);
     
     TH1F* residuals_svt = new TH1F ("res_svt"+suffix, "SVT residuals;residual [mm];# of clusters", 100, -0.5, 0.5);
     TH1F* residuals_bmtz = new TH1F ("res_bmtz"+suffix, "BMTZ residuals;residual [mm];# of clusters", 100, -1.5, 1.5);
@@ -332,7 +343,9 @@ int main(int argc, char * argv[]) {
       //cout << d0 << " "<< phi << " "<< z << " " << tandip << endl;
       
       hchi2ndof->Fill(chi2/ndof);
-      
+      if(chi2/ndof<2)
+        n_chi2_lt_2++;
+      n_tracks++;
       
       
       for(int j = 0; j < aevent->GetMeasuredCovariance()->GetNrows(); j++){
@@ -372,25 +385,35 @@ int main(int argc, char * argv[]) {
     }
     cout << suffix << endl;
     
-    
+    cout << suffix << ":  frac of events with chi2/ndof<2: "  << (n_chi2_lt_2/(double)n_tracks) << endl;
     
     TString opt = before_after ? "SAME" : "";
+    
+    if (isMC){
+      residuals_svt->SetTitle(residuals_svt->GetTitle()+(TString)" (MC)");
+      residuals_bmtz->SetTitle(residuals_bmtz->GetTitle()+(TString)" (MC)");
+      residuals_bmtc->SetTitle(residuals_bmtc->GetTitle()+(TString)" (MC)");
+      hchi2ndof->SetTitle(hchi2ndof->GetTitle()+(TString)" (MC)");
+    }
+    
     c1->cd(1);
     legend1->AddEntry(residuals_svt, Form(suffix + ",\n RMS = %.2f mm, fit #sigma = %.3f mm",residuals_svt->GetRMS(), getSigma(residuals_svt)),"l");
     residuals_svt->Draw(opt);
-    residuals_svt->SetMaximum(residuals_svt->GetMaximum()*4);
+    residuals_svt->SetMaximum(residuals_svt->GetMaximum()*(isMC ? 7 : 4));
     c1->cd(2);
     legend2->AddEntry(residuals_bmtz, Form(suffix + ",\n RMS = %.2f mm, fit #sigma = %.2f mm",residuals_bmtz->GetRMS(), getSigma(residuals_bmtz)),"l");
     residuals_bmtz->Draw(opt);
-    residuals_bmtz->SetMaximum(residuals_bmtz->GetMaximum()*7);
+    residuals_bmtz->SetMaximum(residuals_bmtz->GetMaximum()*(isMC ? 9 : 7));
     c1->cd(3);
     legend3->AddEntry(residuals_bmtc, Form(suffix+ ",\n RMS = %.2f mm, fit #sigma = %.2f mm",residuals_bmtc->GetRMS(), getSigma(residuals_bmtc)), "l");
     residuals_bmtc->Draw(opt);
-    residuals_bmtc->SetMaximum(residuals_bmtc->GetMaximum()*2.4);
+    residuals_bmtc->SetMaximum(residuals_bmtc->GetMaximum()*(isMC ? 3 : 2.4));
     c1->cd(4);
     legend4->AddEntry(hchi2ndof, Form(suffix+", mean = %.1f",hchi2ndof->GetMean()),"l");
-    hchi2ndof->SetMaximum(hchi2ndof->GetMaximum()*10);
+    hchi2ndof->SetMaximum(hchi2ndof->GetMaximum()*(isMC ? 21 : 10));
     hchi2ndof->Draw(opt);
+    
+   
     
     opt = before_after ? "SP" : "AP";
     
@@ -398,16 +421,62 @@ int main(int argc, char * argv[]) {
     line->SetLineStyle(2);
     line->SetLineColorAlpha(kBlack,0.5);
     c2->cd();
-    residuals_vs_module->GetYaxis()->SetTitleOffset(0.5);
+    residuals_vs_module->GetYaxis()->SetTitleOffset(1.5);
     line->DrawLine(0,0,102,0);
     //residuals_vs_module->SetMinimum(-2);
     //residuals_vs_module->SetMaximum(3);
+    if (isMC){
+      suffix = "MC (" + suffix + ")";
+      residuals_vs_module->SetTitle("Residuals (all modules, MC)");
+    }
     TGraphErrors* t = createProfile(residuals_vs_module, color, markerstyle, shift_module,1.5);
-    t->GetHistogram()->SetMinimum(-1.25);
-    t->GetHistogram()->SetMaximum(2);
+    if(before_after){
+      double worstMuSVT=0;
+      double worstMuBMTZ=0;
+      double worstMuBMTC=0;
+      for (int k = 0; k<t->GetN(); k++){
+        double mu = t->GetPointY(k);
+        if(k >=84 && k < 102){
+          if (k <=86 || k>=93 && k<=95 || k>=99){
+            if (abs(mu)>worstMuBMTC)
+              worstMuBMTC=abs(mu);
+          } else {
+            if (abs(mu)>worstMuBMTZ){
+              worstMuBMTZ=abs(mu);
+            }
+          }
+        } else {
+          if(abs(mu)>worstMuSVT){
+            worstMuSVT=abs(mu);
+          }
+        }
+      }
+      cout << "worst residuals for modules (SVT, BMTZ, BMTC): " << worstMuSVT <<", " << worstMuBMTZ << ", "<< worstMuBMTC<<  endl;
+    }
+    t->GetHistogram()->SetMinimum(-1.15);
+    t->GetHistogram()->SetMaximum(1.7);
+    t->GetHistogram()->GetYaxis()->SetTitleOffset(1);
     t->Draw(opt);
+    
     legend5->AddEntry(residuals_vs_module,suffix, "lp");
     
+    if (isMC){
+      residuals_vs_d0_svt->SetTitle(residuals_vs_d0_svt->GetTitle()+(TString)" (MC)");
+      residuals_vs_d0_bmtz->SetTitle(residuals_vs_d0_bmtz->GetTitle()+(TString)" (MC)");
+      residuals_vs_d0_bmtc->SetTitle(residuals_vs_d0_bmtc->GetTitle()+(TString)" (MC)");
+      
+      residuals_vs_phi_svt->SetTitle(residuals_vs_phi_svt->GetTitle()+(TString)" (MC)");
+      residuals_vs_phi_bmtz->SetTitle(residuals_vs_phi_bmtz->GetTitle()+(TString)" (MC)");
+      residuals_vs_phi_bmtc->SetTitle(residuals_vs_phi_bmtc->GetTitle()+(TString)" (MC)");
+      
+      residuals_vs_z_svt->SetTitle(residuals_vs_z_svt->GetTitle()+(TString)" (MC)");
+      residuals_vs_z_bmtz->SetTitle(residuals_vs_z_bmtz->GetTitle()+(TString)" (MC)");
+      residuals_vs_z_bmtc->SetTitle(residuals_vs_z_bmtc->GetTitle()+(TString)" (MC)");
+      
+      residuals_vs_theta_svt->SetTitle(residuals_vs_theta_svt->GetTitle()+(TString)" (MC)");
+      residuals_vs_theta_bmtz->SetTitle(residuals_vs_theta_bmtz->GetTitle()+(TString)" (MC)");
+      residuals_vs_theta_bmtc->SetTitle(residuals_vs_theta_bmtc->GetTitle()+(TString)" (MC)");
+    }
     
     
     c3->cd(1);TGraphErrors *graph = createProfile(residuals_vs_d0_svt, color, markerstyle, shift_d,0.5);graph->Draw(opt);
@@ -428,7 +497,7 @@ int main(int argc, char * argv[]) {
     c3->cd(8);createProfile(residuals_vs_z_bmtz, color, markerstyle, shift_z)->Draw(opt);
     line->DrawLine(zmin,0,zmax,0);
     c3->cd(11);createProfile(residuals_vs_theta_bmtz, color, markerstyle, shift_tandip)->Draw(opt);
-    line->DrawLine(zmin,0,zmax,0);
+    line->DrawLine(tandipmin,0,tandipmax,0);
     
     c3->cd(3);createProfile(residuals_vs_d0_bmtc, color, markerstyle, shift_d)->Draw(opt);
     line->DrawLine(dmin,0,dmax,0);
@@ -468,27 +537,29 @@ int main(int argc, char * argv[]) {
         line->SetLineWidth(2);
       else
         line->SetLineWidth(1);
-      line->DrawLine(x,-1.25,x,x <= 84? 2: 1.8);
+      line->DrawLine(x,-1.15,x,x <= 84? 1.7: 1.4);
     }
     
     TText *text = new TText();
     text->SetTextSize(.06);
-    text->DrawText(12, 1, "SVT (inner)");
-    text->DrawText(12+42, 1, "SVT (outer)");
+    text->DrawText(12, 0.82, "SVT (inner)");
+    text->DrawText(12+42, 0.82, "SVT (outer)");
     
-    text->DrawText(90, 1.8, "BMT");
+    text->DrawText(90, 1.5, "BMT");
     text->SetTextSize(.04);
     
-    text->DrawText(84+1, 1.5, "C");
-    text->DrawText(87+1, 1.5, "Z");
-    text->DrawText(90+1, 1.5, "Z");
-    text->DrawText(93+1, 1.5, "C");
-    text->DrawText(96+1, 1.5, "Z");
-    text->DrawText(99+1, 1.5, "C");
+    text->DrawText(84+0.8, 1.3, "C");
+    text->DrawText(87+0.8, 1.3, "Z");
+    text->DrawText(90+0.8, 1.3, "Z");
+    text->DrawText(93+0.8, 1.3, "C");
+    text->DrawText(96+0.8, 1.3, "Z");
+    text->DrawText(99+0.8, 1.3, "C");
     
     c2->SaveAs(plotsDir+"/residuals_module." + ext);
     c3->cd(1);
     legend6->Draw();
+    //if(label != ""):
+    //  text->DrawText(0, label);
     c3->SaveAs(plotsDir+"/residuals_kinematics." + ext);
   }
   
