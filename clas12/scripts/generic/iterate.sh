@@ -134,7 +134,7 @@ do
     
     cd ${thisdir}; cd ../../table/
     #ccdb rm -v ${var_prefix}${i}
-    ccdb mkvar ${var_prefix}${i} -p ${prev}
+    ccdb mkvar ${var_prefix}${i} -p ${initial_var}
     #BMT
     ccdb dump /geometry/cvt/mvt/alignment -v $prev -r 11 | grep -v '#' > prev.txt
     rm new.txt

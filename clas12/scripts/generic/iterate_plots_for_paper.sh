@@ -1,4 +1,6 @@
-export CCDB_CONNECTION=sqlite:///$HOME/input_for_alignment/clas12_cvtalign_maxime_05142020_6342.sqlite
+#export CCDB_CONNECTION=sqlite:///$HOME/input_for_alignment/clas12_cvtalign_maxime_05142020_6342.sqlite
+export var_prefix=dev
+export CCDB_CONNECTION=sqlite:///$HOME/input_for_alignment/ccdb_2021-12-12.sqlite
 export recompile=false
 export maxiter=8
 export initial_var=rga_fall2018_svtsurvey
