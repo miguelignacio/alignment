@@ -44,6 +44,8 @@ env.MergeFlags('-I#event -L#event -I#util -L#util -lAlignEvent -lUtilities')
 #SConscript(['util/SConscript'], exports='env')
 SConscript(['kfa/SConscript'], exports='env')
 SConscript(['validation/SConscript'], exports='env')
+
+'''
 buildSim=True
 if 'CLHEP_VERSION' not in os.environ.keys():
    print("environmental variable CLHEP_VERSION not found.  CLHEP is needed for simulations.  "+\
@@ -62,3 +64,5 @@ if buildSim:
                + ' -lCLHEP-Matrix-'+CLHEP_VERSION
                + ' -lCLHEP-Vector-'+CLHEP_VERSION)
    SConscript(['simulation/SConscript'], exports='env')
+
+'''
