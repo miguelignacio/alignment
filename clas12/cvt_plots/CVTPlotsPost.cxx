@@ -459,8 +459,8 @@ int main(int argc, char * argv[]) {
   
   TText* t = new TText();
   t->SetTextAlign(22);
-  t->SetTextColor(kRed);
-  t->SetTextColorAlpha(kRed,0.5);
+  t->SetTextColor(kGreen+2);
+  t->SetTextColorAlpha(kGreen+2,0.5);
   
   // create a color scheme in which black is zero, magenta is positive,
   // cyan is negative
@@ -469,12 +469,23 @@ int main(int argc, char * argv[]) {
   double g[3] = {1,0,0};
   double b[3] = {1,0,1};
   double s[3] = {0,0.5,1.0};*/
-  int n = 5;
-  double r[5] = {0.4,0,0,1,1};
-  double g[5] = {1,1,0,0,0.4};
-  double b[5] = {1,1,0,1,1};
-  double s[5] = {0,0.13,0.5,0.87,1.0};
-  TColor::CreateGradientColorTable(n, s, r, g, b, 99);
+  int colorScheme=1;
+  if(colorScheme == 0){ // cyan, black, magenta
+    int n = 5;
+    double r[5] = {0.4,0,0,1,1};
+    double g[5] = {1,1,0,0,0.4};
+    double b[5] = {1,1,0,1,1};
+    double s[5] = {0,0.13,0.5,0.87,1.0};
+    TColor::CreateGradientColorTable(n, s, r, g, b, 99);
+  } else if (colorScheme==1){ // blue, white, red
+    int n = 5;
+    double r[5] = {0,0,1,1,.75};
+    double g[5] = {0,0,1,0,0};
+    double b[5] = {0.75,1,1,0,0};
+    double s[5] = {0,0.13, 0.5,0.87,1.0};
+    TColor::CreateGradientColorTable(n, s, r, g, b, 99);
+  }
+  
   //c->SetLogz();
   hcorr->Draw("COLZ");
   t->SetTextSize(.15);
@@ -482,8 +493,9 @@ int main(int argc, char * argv[]) {
   t->SetTextSize(.05);
   t->DrawText(N*93./102,matsize-N*93./102,"BMT");
   TLine * l = new TLine();
-  l->SetLineColorAlpha(kRed,1);
-  l->SetLineStyle(3);
+  l->SetLineWidth(2);
+  l->SetLineColorAlpha(kGreen+3,0.75);
+  l->SetLineStyle(2);
   l->DrawLine(0, matsize-matsize*84./102, matsize, matsize-matsize*84./102);
   l->DrawLine(matsize*84./102, 0, matsize*84./102, matsize);
   
