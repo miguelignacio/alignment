@@ -476,14 +476,16 @@ int main(int argc, char * argv[]) {
     double g[5] = {1,1,0,0,0.4};
     double b[5] = {1,1,0,1,1};
     double s[5] = {0,0.13,0.5,0.87,1.0};
-    TColor::CreateGradientColorTable(n, s, r, g, b, 99);
+    TColor::CreateGradientColorTable(n, s, r, g, b, 255);
+    gStyle->SetNumberContours(255);
   } else if (colorScheme==1){ // blue, white, red
     int n = 5;
-    double r[5] = {0,0,1,1,.75};
+    double r[5] = {0,0,1,1,.8};
     double g[5] = {0,0,1,0,0};
-    double b[5] = {0.75,1,1,0,0};
-    double s[5] = {0,0.13, 0.5,0.87,1.0};
-    TColor::CreateGradientColorTable(n, s, r, g, b, 99);
+    double b[5] = {0.8,1,1,0,0};
+    double s[5] = {0,0.15, 0.5,0.85,1.0};
+    TColor::CreateGradientColorTable(n, s, r, g, b, 255);
+    gStyle->SetNumberContours(255);
   }
   
   //c->SetLogz();
@@ -507,6 +509,7 @@ int main(int argc, char * argv[]) {
   c->SetCanvasSize(matsize*10/4,matsize*10/4);
   ReverseYAxis(hcorr);
   c->SaveAs(plotsDir+"/correlations.png");
+  c->SaveAs(plotsDir+"/correlations.bmp");
   
   hcorr_bmt->Draw("COLZ");
   ReverseYAxis(hcorr_bmt);
@@ -517,6 +520,7 @@ int main(int argc, char * argv[]) {
   c->SetBottomMargin(0.10);
   c->SetCanvasSize(N*10/4,N*10/4);
   c->SaveAs(plotsDir+"/correlations_bmt.png");
+  c->SaveAs(plotsDir+"/correlations_bmt.bmp");
   
   /*TLegend* legend = new TLegend(0.75, 0.6,1,0.95);
   

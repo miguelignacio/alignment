@@ -33,6 +33,11 @@
 
 using namespace std;
 
+TString formatRvsR(char* x, char* y){
+  return Form("%s vs %s;Residual %s [mm];Residual %s [mm]", x,y,x,y);
+  
+}
+
 double angle(double phi){
   double pi = TMath::Pi();
   while(phi>pi)
@@ -253,7 +258,66 @@ int main(int argc, char * argv[]) {
 
   cout << "initialized histograms" << endl;
   int events = 0, tracks=0;
-
+  
+  /*
+   
+   */
+  
+  vector<int> module1_resid_vs_resid;
+  vector<int> module2_resid_vs_resid;
+  vector<TH2 *> h_module_resid_vs_resid;
+  int nbinsRvR = 50;
+  //double maxResidRvR = 0.6;
+  double maxResidRvR = 2.4;
+  //back to back SVT
+  module1_resid_vs_resid.push_back(5);
+  module2_resid_vs_resid.push_back(47);
+  h_module_resid_vs_resid.push_back(new TH2F("hrvsr1", formatRvsR("SVT L1S6","SVT L2S6"), nbinsRvR, -maxResidRvR, maxResidRvR, nbinsRvR, -maxResidRvR, maxResidRvR));
+  //opposite sides of the detector (cosmics only)
+  module1_resid_vs_resid.push_back(6);
+  module2_resid_vs_resid.push_back(1);
+  h_module_resid_vs_resid.push_back(new TH2F("hrvsr2", formatRvsR("SVT L1S7","SVT L1S2"), nbinsRvR, -maxResidRvR, maxResidRvR, nbinsRvR, -maxResidRvR, maxResidRvR));
+  //overlapping SVT sectors
+  module1_resid_vs_resid.push_back(5);
+  module2_resid_vs_resid.push_back(9+10+14);
+  h_module_resid_vs_resid.push_back(new TH2F("hrvsr3", formatRvsR("SVT L1S6","SVT L5S10"), nbinsRvR, -maxResidRvR, maxResidRvR, nbinsRvR, -maxResidRvR, maxResidRvR));
+  //svt vs bmtc
+  module1_resid_vs_resid.push_back(5);
+  module2_resid_vs_resid.push_back(85);
+  h_module_resid_vs_resid.push_back(new TH2F("hrvsr4", formatRvsR("SVT L1S6","BMTC L1S2"), nbinsRvR, -maxResidRvR, maxResidRvR, nbinsRvR, -maxResidRvR, maxResidRvR));
+  //svt vs bmtz
+  module1_resid_vs_resid.push_back(5);
+  module2_resid_vs_resid.push_back(88);
+  h_module_resid_vs_resid.push_back(new TH2F("hrvsr5", formatRvsR("SVT L1S6","BMTZ L2S2"), nbinsRvR, -maxResidRvR, maxResidRvR, nbinsRvR, -maxResidRvR, maxResidRvR));
+  //bmtz vs bmtz (same sector)
+  module1_resid_vs_resid.push_back(88);
+  module2_resid_vs_resid.push_back(97);
+  h_module_resid_vs_resid.push_back(new TH2F("hrvsr6", formatRvsR("BMTZ L2S2","BMTZ L5S2"), nbinsRvR, -maxResidRvR, maxResidRvR, nbinsRvR, -maxResidRvR, maxResidRvR));
+  //bmtz vs bmtz (different sector)
+  module1_resid_vs_resid.push_back(88);
+  module2_resid_vs_resid.push_back(96);
+  h_module_resid_vs_resid.push_back(new TH2F("hrvsr7", formatRvsR("BMTZ L2S2","BMTZ L5S1"), nbinsRvR, -maxResidRvR, maxResidRvR, nbinsRvR, -maxResidRvR, maxResidRvR));
+  //bmtz vs bmtc (same sector)
+  module1_resid_vs_resid.push_back(88);
+  module2_resid_vs_resid.push_back(100);
+  h_module_resid_vs_resid.push_back(new TH2F("hrvsr8", formatRvsR("BMTZ L2S2","BMTC L6S2"), nbinsRvR, -maxResidRvR, maxResidRvR, nbinsRvR, -maxResidRvR, maxResidRvR));
+  //bmtc vs bmtc (same sector)
+  module1_resid_vs_resid.push_back(85);
+  module2_resid_vs_resid.push_back(100);
+  h_module_resid_vs_resid.push_back(new TH2F("hrvsr9", formatRvsR("BMTZ L1S2","BMTC L6S2"), nbinsRvR, -maxResidRvR, maxResidRvR, nbinsRvR, -maxResidRvR, maxResidRvR));
+  //bmtc vs bmtc (diff. sector)
+  module1_resid_vs_resid.push_back(85);
+  module2_resid_vs_resid.push_back(99);
+  h_module_resid_vs_resid.push_back(new TH2F("hrvsr10", formatRvsR("BMTZ L1S2","BMTC L6S1"), nbinsRvR, -maxResidRvR, maxResidRvR, nbinsRvR, -maxResidRvR, maxResidRvR));
+  
+  for (int i = 0; i<h_module_resid_vs_resid.size();i++){
+    TH2* h = h_module_resid_vs_resid[i];
+    h->SetTitleSize(0.06,"XYZT");
+    h->SetLabelSize(0.06,"XYZ");
+    //h->SetPadLeftMargin(0.14);
+    //h->SetPadBottomMargin(0.14);
+  }
+  
   int ndof =0;
   float chi2 =0;
   for(int i = 0; i<AlignTree->GetEntriesFast();i++){
@@ -339,6 +403,21 @@ int main(int argc, char * argv[]) {
       hextrap->Fill((*aevent->GetTrackPrediction())(j));
       hmeasextrap->Fill((*aevent->GetMeasurements())(j),(*aevent->GetTrackPrediction())(j));
       double resid = (*aevent->GetMeasurements())(j)-(*aevent->GetTrackPrediction())(j);
+      
+      //residual vs residual plots
+      for (int jj =0;jj<module1_resid_vs_resid.size(); jj++){
+        if (module != module1_resid_vs_resid[jj])
+          continue;
+        for (int k =0;k<aevent->GetMeasuredCovariance()->GetNrows(); k++){
+            int module2 = aevent->GetIndex()->At(k);
+          if (module2 != module2_resid_vs_resid[jj])
+            continue;
+          double resid2 = (*aevent->GetMeasurements())(k)-(*aevent->GetTrackPrediction())(k);
+          h_module_resid_vs_resid[jj]->Fill(resid,resid2);
+        }
+      }
+      
+      
       hresidual->Fill(resid);
       if(module >=84 && module < 102){
         if (module <=86 || module>=93 && module<=95 || module>=99){
@@ -527,6 +606,47 @@ int main(int argc, char * argv[]) {
     
     gStyle->SetPadRightMargin(.2);
     createPlotXY(hresidualmod,"residuals","residual (mm)")->Draw("COLZ1"); drawLabel(label);c->SaveAs(plotsDir+"/residualxy.png");
+    
+    TCanvas* c2 = new TCanvas("big_canvas","big_canvas",1200,1300);
+    gStyle->SetPadLeftMargin(.2);
+    gStyle->SetPadRightMargin(.15);
+    gStyle->SetPadTopMargin(.1);
+    gStyle->SetPadBottomMargin(.15);
+    gStyle->SetOptStat(0);
+
+    c2->Divide(4,5);
+    for(int i = 0; i<h_module_resid_vs_resid.size(); i++){
+      c2->cd(2*i+1);
+      gStyle->SetPalette(kBird);
+      h_module_resid_vs_resid[i]->GetXaxis()->SetNdivisions(610);
+      h_module_resid_vs_resid[i]->GetYaxis()->SetNdivisions(610);
+      h_module_resid_vs_resid[i]->Draw("COLZ");
+      
+    }
+    
+    //draw locations of the two sensors
+    //int n = 4;
+    //double r[4] = {0.8,0.8, 0,1};
+    //double g[4] = {0.8,0.8, 0,0};
+    //double b[4] = {0.8,0.8, 1,0};
+    //double s[4] = {0,0.33, 0.67, 1.0};
+    //int palette = TColor::CreateGradientColorTable(n, s, r, g, b, 255,0);
+    //gStyle->SetNumberContours(255);
+    for(int i = 0; i<h_module_resid_vs_resid.size(); i++){
+      //draw locations
+      c2->cd(2*i+2);
+      //gStyle->SetPalette(4, (int[4]){kGray, kGray, kBlue, kRed});
+      TH1* hh = new TH1F(Form("temp%d", i), "", 102, 0, 102);
+      for(int j = 0; j<102; j++){
+        hh->Fill(j);
+      }
+      hh->Fill(module1_resid_vs_resid[i]);
+      hh->Fill(module2_resid_vs_resid[i]);
+      hh->Fill(module2_resid_vs_resid[i]);
+      createPlotXY(hh, "", "","count")->Draw("COLZ");
+    }
+    c2->SaveAs(plotsDir+"/residuals_vs_residuals.pdf");
+    
     
   }
   
