@@ -18,7 +18,7 @@ means = []
 hists = []
 #n = 6
 for i in range(0,n):
-    inputFileName=f"~/alignment/clas12/scripts/generic/cache/data_noLC/plots_pass_{i+1}/prealign.root"
+    inputFileName=f"{indir}/plots_pass_{i+1}/prealign.root"
     inputFile = ROOT.TFile(inputFileName)
     AlignTree =inputFile.Get("AlignTree")
     AlignTree.Draw(f"AlignEvent.fChi2/AlignEvent.fNdof>>h{i+1}(100, 0, 20)", "AlignEvent.fChi2/AlignEvent.fNdof<20", "N")
