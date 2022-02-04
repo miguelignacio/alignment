@@ -148,6 +148,10 @@ int main(int argc, char * argv[]) {
   AlignTree->Branch("q1",&q1,"q1/F");
   AlignTree->Branch("q2",&q2,"q2/F");
   AlignTree->Branch("q3",&q3,"q3/F");
+
+  float centroid[24]; //centroids of the clusters
+  
+  AlignTree->Branch("centroid", &centroid, "centroid/[24]F");
   
   // auto save every MB
   AlignTree->SetAutoSave(1000000);
@@ -174,6 +178,9 @@ int main(int argc, char * argv[]) {
     hipo::bank bank_I(factory.getSchema("Align::I"));
     hipo::bank bank_q(factory.getSchema("Align::q"));
     hipo::bank bank_misc(factory.getSchema("Align::misc"));
+    hipo::bank bank_trajectory(factory.getSchema("CVTRec::Trajectory"));
+    
+    
     
     hipo::event event;
     while(r.next()){
@@ -189,6 +196,7 @@ int main(int argc, char * argv[]) {
       event.getStructure(bank_I);
       event.getStructure(bank_A);
       event.getStructure(bank_q);
+      event.getStructure(bank_trajectory);
       for(int i = 0; i<bank_A.getRows(); i++){
         
         // 42 SVT modules
@@ -214,6 +222,17 @@ int main(int argc, char * argv[]) {
         aevent->SetChi2(bank_misc.getFloat(bank_misc.getSchema().getEntryOrder("chi2"),i));;
         aevent->SetNdof(bank_misc.getShort(bank_misc.getSchema().getEntryOrder("ndof"),i));
         aevent->SetTrackNumber(bank_misc.getInt(bank_misc.getSchema().getEntryOrder("track"),i));
+
+	//get the clusters' centroid strip number from the trajectory bank
+	int trackid = bank_misc.getInt(bank_misc.getSchema().getEntryOrder("track"),i);
+	int k = 0;
+	for(int j =0; j<bank_trajectory.getRows(); j++){
+	  if(trackid != bank_trajectory.getShort(bank_trajectory.getSchema().getEntryOrder("id"),j))
+	    continue;
+	  centroid[k]=bank_trajectory.getFloat(bank_trajectory.getSchema().getEntryOrder("centroid"),j);
+	  k+=1;
+	}
+	
         //TVectorD* q;
         //getFromBank(q, bank_q,i);
         //cout << "checkpoint1" <<endl;
