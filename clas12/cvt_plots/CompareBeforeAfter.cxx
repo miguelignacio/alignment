@@ -138,7 +138,7 @@ double getSigma(TH1* h){
   sigma = g->GetParameter("Sigma");
   return sigma;
 }
-TGraphErrors* createProfile(TH2D * h, int color, int markerstyle, double shift,double ywindow=1.5, bool gausFit=1){
+TGraphErrors* createProfile(TH2D * h, int color, int markerstyle, double shift,double ywindow=1.5, int fitType=1){
   
   int n =h->GetXaxis()->GetNbins();
   double x[n];
@@ -151,6 +151,32 @@ TGraphErrors* createProfile(TH2D * h, int color, int markerstyle, double shift,d
   double chi2 = 0;
   for(int i = 0; i<n;i++){
     TH1* proj = h->ProjectionY("temp", i,i+1);
+    
+    if (fitType==2){ //full width at half max
+      double max = proj->GetMaximum();
+      int maxbin = proj->GetXaxis()->GetBinCenter(h->GetMaximumBin());
+      double left = proj->GetXaxis()->GetXmin();
+      double right = proj->GetXaxis()->GetXmax();
+      double prev = 0;
+      for(int j = 0;j< proj->GetNbinsX(); j++){
+        double bc = proj->GetBinContent(j);
+        if(bc>max/2 && prev< max/2 && j<maxbin)
+          left = (proj->GetXaxis()->GetBinCenter(j)+proj->GetXaxis()->GetBinCenter(j-1))/2;
+        else if(bc<max/2 && prev> max/2 && j>maxbin){
+          right = (proj->GetXaxis()->GetBinCenter(j)+proj->GetXaxis()->GetBinCenter(j-1))/2;
+          break;
+        }
+      }
+      x[i] = proj->GetXaxis()->GetBinCenter(i+1)+shift;
+      ex[i] = 0;
+      y[i] = proj->GetXaxis()->GetBinCenter(maxbin);
+      ey[i] = (right-left)/2;
+      if(proj->GetEntries()<10){
+        y[i]=100;
+      }
+      continue;
+    }
+    
     double mu = proj->GetMean();
     //double dmu = proj->GetMeanError();
     double sigma = proj->GetStdDev();
@@ -163,7 +189,7 @@ TGraphErrors* createProfile(TH2D * h, int color, int markerstyle, double shift,d
     mu = g->GetParameter("Mean");
     sigma = g->GetParameter("Sigma");
     double dmu = g->GetParError(1);
-    if(sigma>5 || gausFit == 0){
+    if(sigma>5 || fitType == 0){
       mu = proj->GetMean();
       sigma = proj->GetStdDev();
       //proj->Draw();
@@ -220,7 +246,7 @@ int main(int argc, char * argv[]) {
   vector<TString> inputFiles;
   TString label ="";
   bool isMC = 0;
-  bool useGaus = 1;
+  bool fitType = 1;
   for(Int_t i=1;i<argc;i++){
     TString opt=argv[i];
     if((opt.Contains("--before="))){
@@ -243,7 +269,12 @@ int main(int argc, char * argv[]) {
       isMC=1;
     }
     if (opt == "--meanStd"){
-      useGaus = 0;
+      fitType = 0;
+    }
+    if (opt == "--fwhm"){
+      fitType = 2;
+
+      //exit(0);
     }
   }
   
@@ -611,7 +642,7 @@ int main(int argc, char * argv[]) {
       suffix = "MC (" + suffix + ")";
       residuals_vs_module->SetTitle("Residuals (all modules, MC)");
     }
-    TGraphErrors* t = createProfile(residuals_vs_module, color, markerstyle, shift_module,1.5,useGaus);
+    TGraphErrors* t = createProfile(residuals_vs_module, color, markerstyle, shift_module,1.5,fitType);
     if(before_after){
       double worstMuSVT=0;
       double worstMuBMTZ=0;
@@ -661,33 +692,33 @@ int main(int argc, char * argv[]) {
     }
     
     
-    c3->cd(1);TGraphErrors *graph = createProfile(residuals_vs_d0_svt, color, markerstyle, shift_d,0.5,useGaus);graph->Draw(opt);
+    c3->cd(1);TGraphErrors *graph = createProfile(residuals_vs_d0_svt, color, markerstyle, shift_d,0.5,fitType);graph->Draw(opt);
     legend6->AddEntry(graph,suffix, "lp");
     line->DrawLine(dmin,0,dmax,0);
-    c3->cd(4);createProfile(residuals_vs_phi_svt, color, markerstyle, shift_phi,0.5,useGaus)->Draw(opt);
+    c3->cd(4);createProfile(residuals_vs_phi_svt, color, markerstyle, shift_phi,0.5,fitType)->Draw(opt);
     line->DrawLine(phimin,0,phimax,0);
-    c3->cd(7);createProfile(residuals_vs_z_svt, color, markerstyle, shift_z,0.5,useGaus)->Draw(opt);
+    c3->cd(7);createProfile(residuals_vs_z_svt, color, markerstyle, shift_z,0.5,fitType)->Draw(opt);
     line->DrawLine(zmin,0,zmax,0);
-    c3->cd(10);createProfile(residuals_vs_theta_svt, color, markerstyle, shift_tandip,0.5,useGaus)->Draw(opt);
+    c3->cd(10);createProfile(residuals_vs_theta_svt, color, markerstyle, shift_tandip,0.5,fitType)->Draw(opt);
     line->DrawLine(tandipmin,0,tandipmax,0);
     
     
-    c3->cd(2);createProfile(residuals_vs_d0_bmtz, color, markerstyle, shift_d, 1.5,useGaus)->Draw(opt);
+    c3->cd(2);createProfile(residuals_vs_d0_bmtz, color, markerstyle, shift_d, 1.5,fitType)->Draw(opt);
     line->DrawLine(dmin,0,dmax,0);
-    c3->cd(5);createProfile(residuals_vs_phi_bmtz, color, markerstyle, shift_phi, 1.5,useGaus)->Draw(opt);
+    c3->cd(5);createProfile(residuals_vs_phi_bmtz, color, markerstyle, shift_phi, 1.5,fitType)->Draw(opt);
     line->DrawLine(phimin,0,phimax,0);
-    c3->cd(8);createProfile(residuals_vs_z_bmtz, color, markerstyle, shift_z, 1.5,useGaus)->Draw(opt);
+    c3->cd(8);createProfile(residuals_vs_z_bmtz, color, markerstyle, shift_z, 1.5,fitType)->Draw(opt);
     line->DrawLine(zmin,0,zmax,0);
-    c3->cd(11);createProfile(residuals_vs_theta_bmtz, color, markerstyle, shift_tandip, 1.5,useGaus)->Draw(opt);
+    c3->cd(11);createProfile(residuals_vs_theta_bmtz, color, markerstyle, shift_tandip, 1.5,fitType)->Draw(opt);
     line->DrawLine(tandipmin,0,tandipmax,0);
     
-    c3->cd(3);createProfile(residuals_vs_d0_bmtc, color, markerstyle, shift_d, 1.5,useGaus)->Draw(opt);
+    c3->cd(3);createProfile(residuals_vs_d0_bmtc, color, markerstyle, shift_d, 1.5,fitType)->Draw(opt);
     line->DrawLine(dmin,0,dmax,0);
-    c3->cd(6);createProfile(residuals_vs_phi_bmtc, color, markerstyle, shift_phi, 1.5,useGaus)->Draw(opt);
+    c3->cd(6);createProfile(residuals_vs_phi_bmtc, color, markerstyle, shift_phi, 1.5,fitType)->Draw(opt);
     line->DrawLine(phimin,0,phimax,0);
-    c3->cd(9);createProfile(residuals_vs_z_bmtc, color, markerstyle, shift_z, 1.5,useGaus)->Draw(opt);
+    c3->cd(9);createProfile(residuals_vs_z_bmtc, color, markerstyle, shift_z, 1.5,fitType)->Draw(opt);
     line->DrawLine(zmin,0,zmax,0);
-    c3->cd(12);createProfile(residuals_vs_theta_bmtc, color, markerstyle, shift_tandip, 1.5,useGaus)->Draw(opt);
+    c3->cd(12);createProfile(residuals_vs_theta_bmtc, color, markerstyle, shift_tandip, 1.5,fitType)->Draw(opt);
     //c3->cd(12);residuals_vs_theta_bmtc->Draw(opt);
     line->DrawLine(tandipmin,0,tandipmax,0);
     
@@ -752,7 +783,13 @@ int main(int argc, char * argv[]) {
     text->DrawText(93+0.8, 1.3, "C");
     text->DrawText(96+0.8, 1.3, "Z");
     text->DrawText(99+0.8, 1.3, "C");
-    TString tag = useGaus ? "": "_mean_std" ;
+  
+    TString tag =  "";
+    if (fitType== 0)
+      tag =  "_mean_std";
+    if (fitType ==2)
+      tag = "_FWHM";
+    cout << "tag is " << tag << ", fitType=" << fitType <<  endl;
     c2->SaveAs(plotsDir+"/residuals_module"+tag+ "." + ext);
     c3->cd(1);
     legend6->Draw();
