@@ -129,8 +129,8 @@ double getSigma(TH1* h){
   double mu = h->GetMean();
   double sigma = h->GetStdDev();
   
-  double minfit = mu-2*sigma;
-  double maxfit = mu+2*sigma;
+  double minfit = mu-1.5*sigma;
+  double maxfit = mu+1.5*sigma;
   g->SetParameter("Mean", mu);
   g->SetParameter("Sigma", sigma);
   h->Fit(g, "N", "", minfit, maxfit);
@@ -581,7 +581,7 @@ int main(int argc, char * argv[]) {
     c1->cd(1);
     legend1->AddEntry(residuals_svt, Form(suffix + ",\n RMS = %.2f mm, fit #sigma = %.3f mm",residuals_svt->GetRMS(), getSigma(residuals_svt)),"l");
     residuals_svt->Draw(opt);
-    residuals_svt->SetMaximum(residuals_svt->GetMaximum()*(isMC ? 7 : 4));
+    residuals_svt->SetMaximum(residuals_svt->GetMaximum()*(isMC ? 7 : 6));
     c1->cd(2);
     legend2->AddEntry(residuals_bmtz, Form(suffix + ",\n RMS = %.2f mm, fit #sigma = %.2f mm",residuals_bmtz->GetRMS(), getSigma(residuals_bmtz)),"l");
     residuals_bmtz->Draw(opt);
@@ -589,10 +589,10 @@ int main(int argc, char * argv[]) {
     c1->cd(3);
     legend3->AddEntry(residuals_bmtc, Form(suffix+ ",\n RMS = %.2f mm, fit #sigma = %.2f mm",residuals_bmtc->GetRMS(), getSigma(residuals_bmtc)), "l");
     residuals_bmtc->Draw(opt);
-    residuals_bmtc->SetMaximum(residuals_bmtc->GetMaximum()*(isMC ? 3 : 2.4));
+    residuals_bmtc->SetMaximum(residuals_bmtc->GetMaximum()*(isMC ? 3 : 3));
     c1->cd(4);
     legend4->AddEntry(hchi2ndof, Form(suffix+", mean = %.1f",hchi2ndof->GetMean()),"l");
-    hchi2ndof->SetMaximum(hchi2ndof->GetMaximum()*(isMC ? 21 : 10));
+    hchi2ndof->SetMaximum(hchi2ndof->GetMaximum()*(isMC ? 21 : 12));
     hchi2ndof->Draw(opt);
     
    
