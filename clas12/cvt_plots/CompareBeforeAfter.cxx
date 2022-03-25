@@ -153,9 +153,22 @@ double getStdTruncated(TH1* h, double q=0.10){
   return clo->GetStdDev();
 }
 
+double getMeanTruncated(TH1* h, double q=0.10){
+   TH1* cum = h->GetCumulative();
+  cum->Scale(1/h->Integral());
+  TH1* clo = (TH1*)h->Clone();
+  for(int i = 0; i< cum->GetNbinsX(); i++){
+    if (cum->GetBinContent(i)<q/2 || cum->GetBinContent(i)>1-q/2)
+      {
+        clo->SetBinContent(i,0);
+      }
+  }
+  return clo->GetMean();
+}
+
 
 TGraphErrors* createProfile(TH2D * h, int color, int markerstyle, double shift,double ywindow=1.5, int fitType=1){
-  
+
   int n =h->GetXaxis()->GetNbins();
   double x[n];
   double y[n];
@@ -226,7 +239,7 @@ TGraphErrors* createProfile(TH2D * h, int color, int markerstyle, double shift,d
     sigma = g->GetParameter("Sigma");
     double dmu = g->GetParError(1);
     if(sigma>5 || fitType == 0){
-      mu = proj->GetMean();
+      mu = getMeanTruncated(proj);
       sigma = getStdTruncated(proj);
       //proj->Draw();
       //gPad->SaveAs(plotsDir+ "/error.pdf");
@@ -261,16 +274,16 @@ TGraphErrors* createProfile(TH2D * h, int color, int markerstyle, double shift,d
   profile->GetYaxis()->SetTitleOffset(h->GetYaxis()->GetTitleOffset());
   profile->GetHistogram()->SetTitleSize(h->GetTitleSize(), "XYZT");
   profile->GetHistogram()->SetLabelSize(h->GetLabelSize(), "XYZT");
-  profile->GetXaxis()->SetTitleSize(h->GetTitleSize());
-  profile->GetYaxis()->SetTitleSize(h->GetTitleSize());
-  profile->GetXaxis()->SetLabelSize(h->GetTitleSize());
-  profile->GetYaxis()->SetLabelSize(h->GetTitleSize());
+  profile->GetXaxis()->SetTitleSize(h->GetTitleSize("X"));
+  profile->GetYaxis()->SetTitleSize(h->GetTitleSize("Y"));
+  profile->GetXaxis()->SetLabelSize(h->GetLabelSize("X"));
+  profile->GetYaxis()->SetLabelSize(h->GetLabelSize("Y"));
   
   profile->GetHistogram()->SetMaximum(ywindow);   // along
   profile->GetHistogram()->SetMinimum(-ywindow);  //   Y
   
-  cout << h->GetName() << " worst mu: " << largestMu << "+-"<< largestMuError << endl;
-  cout << h->GetName() << " chi2: " << chi2 << endl;
+  //cout << h->GetName() << " worst mu: " << largestMu << "+-"<< largestMuError << endl;
+  //cout << h->GetName() << " chi2: " << chi2 << endl;
   return profile;
 //return h->ProfileX(h->GetName()+(TString&)"_prof");
   
@@ -338,9 +351,10 @@ int main(int argc, char * argv[]) {
 
   gStyle->SetTitleSize(0.06,"XYZT");
   gStyle->SetLabelSize(0.06,"XYZT");
-  gStyle->SetPadLeftMargin(.15);
-  gStyle->SetPadRightMargin(.02);
-  gStyle->SetPadBottomMargin(.12);
+  gStyle->SetPadLeftMargin(.19);
+  gStyle->SetPadRightMargin(.03);
+  gStyle->SetPadBottomMargin(.13);
+  //gStyle->SetPadTopMargin(0.1);
   TCanvas* c3 = new TCanvas("c3","c3",1200,1600);
   c3->Divide(3,4);
   
@@ -353,9 +367,14 @@ int main(int argc, char * argv[]) {
   legend3->SetBorderSize(0);
   legend4->SetBorderSize(0);
   
-  TLegend* legend5 = new TLegend(0.1, 0.75, 0.40, 0.9);
-  TLegend* legend6 = new TLegend(0.15, 0.70, 0.70, 0.9);
+  TLegend* legend5 = new TLegend(0.13, 0.74, 0.40, 0.89);
+  TLegend* legend6 = new TLegend(0.25, 0.67, 0.7, 0.87);
+  legend5->SetBorderSize(0);
+  legend6->SetBorderSize(0);
+
   
+  gStyle->SetPadBottomMargin(.12);
+  gStyle->SetPadLeftMargin(0.13);
   TCanvas* c4 = new TCanvas("c4","c4",800,1300);
   c4->Divide(3,5);
   
@@ -443,19 +462,19 @@ int main(int argc, char * argv[]) {
     cout << shift_d << endl;
     
     
-    gStyle->SetLabelSize(0.07,"XYZT");
-    gStyle->SetTitleSize(0.07, "XYZT");
-    TH2D* residuals_vs_phi_svt = new  TH2D ("res_phi_svt"+suffix, "SVT residuals vs #phi_{0};#phi_{0} [rad];residual [mm]"+ statlbl, nbins_kin,phimin, phimax, RESID_BINS); residuals_vs_phi_svt->SetTitleSize(0.1, "XYZT"); residuals_vs_phi_svt->SetLabelSize(0.1, "XYZT");
-    TH2D* residuals_vs_d0_svt =  new TH2D ("res_d0_svt"+suffix, "SVT residuals vs d_{0};d_{0} [mm]; residual [mm]" + statlbl, nbins_kin, dmin, dmax, RESID_BINS); residuals_vs_d0_svt->SetTitleSize(0.07, "XYZT"); residuals_vs_d0_svt->SetLabelSize(0.07, "XYZT");
-    TH2D* residuals_vs_theta_svt =  new TH2D ("res_theta_svt"+suffix, "SVT residuals vs t_{0};t_{0};residual [mm]"+statlbl, nbins_kin, tandipmin, tandipmax, RESID_BINS); residuals_vs_theta_svt->SetTitleSize(0.07, "XYZT"); residuals_vs_theta_svt->SetLabelSize(0.07, "XYZT");
-    TH2D* residuals_vs_z_svt =  new TH2D ("res_z_svt"+suffix, "SVT residuals vs z_{0};z_{0} [mm];residual [mm]"+statlbl, nbins_kin, zmin, zmax, RESID_BINS);  residuals_vs_z_svt->SetTitleSize(0.07, "XYZT"); residuals_vs_z_svt->SetLabelSize(0.07, "XYZT");
+    gStyle->SetLabelSize(0.06,"XYZT");
+    gStyle->SetTitleSize(0.06, "XYZT");
+    TH2D* residuals_vs_phi_svt = new  TH2D ("res_phi_svt"+suffix, "SVT residuals vs #phi_{0};#phi_{0} [rad];residual [mm]"+ statlbl, nbins_kin,phimin, phimax, RESID_BINS); residuals_vs_phi_svt->SetTitleSize(0.1, "XYZT"); residuals_vs_phi_svt->SetLabelSize(0.06, "XYZT");
+    TH2D* residuals_vs_d0_svt =  new TH2D ("res_d0_svt"+suffix, "SVT residuals vs d_{0};d_{0} [mm]; residual [mm]" + statlbl, nbins_kin, dmin, dmax, RESID_BINS); residuals_vs_d0_svt->SetTitleSize(0.06, "XYZT"); residuals_vs_d0_svt->SetLabelSize(0.06, "XYZT");
+    TH2D* residuals_vs_theta_svt =  new TH2D ("res_theta_svt"+suffix, "SVT residuals vs t_{0};t_{0};residual [mm]"+statlbl, nbins_kin, tandipmin, tandipmax, RESID_BINS); residuals_vs_theta_svt->SetTitleSize(0.06, "XYZT"); residuals_vs_theta_svt->SetLabelSize(0.06, "XYZT");
+    TH2D* residuals_vs_z_svt =  new TH2D ("res_z_svt"+suffix, "SVT residuals vs z_{0};z_{0} [mm];residual [mm]"+statlbl, nbins_kin, zmin, zmax, RESID_BINS);  residuals_vs_z_svt->SetTitleSize(0.06, "XYZT"); residuals_vs_z_svt->SetLabelSize(0.06, "XYZT");
     
-    TH2D* residuals_vs_phi_bmtz = new  TH2D ("res_phi_bmtz"+suffix, "BMTZ residuals vs #phi_{0};#phi_{0} [rad];residual [mm]"+statlbl, nbins_kin, phimin,phimax, RESID_BINS); residuals_vs_phi_bmtz->SetTitleSize(0.07, "XYZT"); residuals_vs_phi_bmtz->SetLabelSize(0.07, "XYZT");
-    TH2D* residuals_vs_d0_bmtz = new  TH2D ("res_d0_bmtz"+suffix, "BMTZ residuals vs d_{0};d_{0} [mm]; residual [mm]"+statlbl, nbins_kin, dmin, dmax, RESID_BINS); residuals_vs_d0_bmtz->SetTitleSize(0.07, "XYZT"); residuals_vs_d0_bmtz->SetLabelSize(0.07, "XYZT\
+    TH2D* residuals_vs_phi_bmtz = new  TH2D ("res_phi_bmtz"+suffix, "BMTZ residuals vs #phi_{0};#phi_{0} [rad];residual [mm]"+statlbl, nbins_kin, phimin,phimax, RESID_BINS); residuals_vs_phi_bmtz->SetTitleSize(0.06, "XYZT"); residuals_vs_phi_bmtz->SetLabelSize(0.06, "XYZT");
+    TH2D* residuals_vs_d0_bmtz = new  TH2D ("res_d0_bmtz"+suffix, "BMTZ residuals vs d_{0};d_{0} [mm]; residual [mm]"+statlbl, nbins_kin, dmin, dmax, RESID_BINS); residuals_vs_d0_bmtz->SetTitleSize(0.06, "XYZT"); residuals_vs_d0_bmtz->SetLabelSize(0.06, "XYZT\
 ");
-    TH2D* residuals_vs_theta_bmtz = new  TH2D ("res_theta_bmtz"+suffix, "BMTZ residuals vs t_{0};t_{0};residual [mm]"+statlbl, nbins_kin, tandipmin, tandipmax, RESID_BINS); residuals_vs_theta_bmtz->SetTitleSize(0.07, "XYZT"); residuals_vs_theta_bmtz->SetLabelSize(0.07, "XYZT\
+    TH2D* residuals_vs_theta_bmtz = new  TH2D ("res_theta_bmtz"+suffix, "BMTZ residuals vs t_{0};t_{0};residual [mm]"+statlbl, nbins_kin, tandipmin, tandipmax, RESID_BINS); residuals_vs_theta_bmtz->SetTitleSize(0.06, "XYZT"); residuals_vs_theta_bmtz->SetLabelSize(0.06, "XYZT\
 ");
-    TH2D* residuals_vs_z_bmtz =  new TH2D ("res_z_bmtz"+suffix, "BMTZ residuals vs z_{0};z_{0} [mm];residual [mm]"+statlbl, nbins_kin, zmin, zmax, RESID_BINS); residuals_vs_z_bmtz->SetTitleSize(0.07, "XYZT"); residuals_vs_z_bmtz->SetLabelSize(0.07, "XYZT\
+    TH2D* residuals_vs_z_bmtz =  new TH2D ("res_z_bmtz"+suffix, "BMTZ residuals vs z_{0};z_{0} [mm];residual [mm]"+statlbl, nbins_kin, zmin, zmax, RESID_BINS); residuals_vs_z_bmtz->SetTitleSize(0.06, "XYZT"); residuals_vs_z_bmtz->SetLabelSize(0.06, "XYZT\
 ");
     
     TH2D* residuals_vs_phi_bmtc = new  TH2D ("res_phi_bmtc"+suffix, "BMTC residuals vs #phi_{0};#phi_{0} [rad];residual [mm]"+statlbl, nbins_kin, phimin, phimax,RESID_BINS);
@@ -686,17 +705,17 @@ int main(int argc, char * argv[]) {
     
     c1->cd(1);
     //legend1->AddEntry(residuals_svt, Form(suffix + ",\n RMS = %.2f mm, fit #sigma = %.3f mm",residuals_svt->GetRMS(), getSigma(residuals_svt)),"l");
-    legend1->AddEntry(residuals_svt, Form(suffix + ",\n mean = %.0f #mum, std = %.0f #mum",1000*residuals_svt->GetMean(), 1000*getStdTruncated(residuals_svt),"l")); 
+    legend1->AddEntry(residuals_svt, Form(suffix + ",\n mean = %.0f #mum, std = %.0f #mum",1000*getMeanTruncated(residuals_svt), 1000*getStdTruncated(residuals_svt),"l")); 
     residuals_svt->Draw(opt);
     residuals_svt->SetMaximum(residuals_svt->GetMaximum()*(isMC ? 7 : 5.5));
     c1->cd(2);
     //legend2->AddEntry(residuals_bmtz, Form(suffix + ",\n RMS = %.2f mm, fit #sigma = %.2f mm",residuals_bmtz->GetRMS(), getSigma(residuals_bmtz)),"l");
-    legend2->AddEntry(residuals_bmtz, Form(suffix + ",\n mean = %.0f #mum, std = %.0f #mum",residuals_bmtz->GetMean()*1000, 1000*getStdTruncated(residuals_bmtz),"l"));
+    legend2->AddEntry(residuals_bmtz, Form(suffix + ",\n mean = %.0f #mum, std = %.0f #mum",getMeanTruncated(residuals_bmtz)*1000, 1000*getStdTruncated(residuals_bmtz),"l"));
     residuals_bmtz->Draw(opt);
     residuals_bmtz->SetMaximum(residuals_bmtz->GetMaximum()*(isMC ? 9 : 7));
     c1->cd(3);
     //legend3->AddEntry(residuals_bmtc, Form(suffix+ ",\n RMS = %.2f mm, fit #sigma = %.2f mm",residuals_bmtc->GetRMS(), getSigma(residuals_bmtc)), "l");
-    legend3->AddEntry(residuals_bmtc, Form(suffix+ ",\n mean = %.0f #mum, std = %.0f #mum",1000*residuals_bmtc->GetMean(), 1000*getStdTruncated(residuals_bmtc), "l"));
+    legend3->AddEntry(residuals_bmtc, Form(suffix+ ",\n mean = %.0f #mum, std = %.0f #mum",1000*getMeanTruncated(residuals_bmtc), 1000*getStdTruncated(residuals_bmtc), "l"));
     residuals_bmtc->Draw(opt);
     residuals_bmtc->SetMaximum(residuals_bmtc->GetMaximum()*(isMC ? 3 : 3.5));
     c1->cd(4);
@@ -713,6 +732,8 @@ int main(int argc, char * argv[]) {
     line->SetLineColorAlpha(kBlack,0.5);
     c2->cd();
     residuals_vs_module->GetYaxis()->SetTitleOffset(1.5);
+    residuals_vs_module->SetLabelSize(0.05, "XYZT");
+    residuals_vs_module->SetTitleSize(0.05, "XYZT");
     line->DrawLine(0,0,102,0);
     //residuals_vs_module->SetMinimum(-2);
     //residuals_vs_module->SetMaximum(3);
@@ -769,34 +790,34 @@ int main(int argc, char * argv[]) {
       residuals_vs_theta_bmtc->SetTitle(residuals_vs_theta_bmtc->GetTitle()+(TString)" (MC)");
     }
     
-    gStyle->SetTitleH(0.08);
-    c3->cd(1);TGraphErrors *graph = createProfile(residuals_vs_d0_svt, color, markerstyle, shift_d,0.5,fitType);graph->Draw(opt);
-    legend6->AddEntry(graph,suffix, "lp"); graph->GetHistogram()->SetLabelSize(0.07, "XYZT"); graph->GetHistogram()->SetTitleSize(0.07,"XYZT");
+    //gStyle->SetTitleH(0.06);
+    c3->cd(1);TGraphErrors *graph = createProfile(residuals_vs_d0_svt, color, markerstyle, shift_d,0.5,fitType); graph->GetHistogram()->SetLabelSize(0.06, "XYZT"); graph->GetHistogram()->SetTitleSize(0.06,"XYZT"); graph->Draw(opt);
+    legend6->AddEntry(graph,suffix, "lp"); graph->GetHistogram()->SetLabelSize(0.06, "XYZT"); graph->GetHistogram()->SetTitleSize(0.06,"XYZT");
     line->DrawLine(dmin,0,dmax,0);
-    c3->cd(4); graph=createProfile(residuals_vs_phi_svt, color, markerstyle, shift_phi,0.5,fitType);graph->Draw(opt); graph->GetHistogram()->SetLabelSize(0.07, "XYZT"); graph->GetHistogram()->SetTitleSize(0.07, "XYZT");
+    c3->cd(4); graph=createProfile(residuals_vs_phi_svt, color, markerstyle, shift_phi,0.5,fitType);graph->Draw(opt); graph->GetHistogram()->SetLabelSize(0.06, "XYZT"); graph->GetHistogram()->SetTitleSize(0.06, "XYZT");
     line->DrawLine(phimin,0,phimax,0);
-    c3->cd(7); graph=createProfile(residuals_vs_z_svt, color, markerstyle, shift_z,0.5,fitType);graph->Draw(opt); graph->GetHistogram()->SetLabelSize(0.07, "XYZT"); graph->GetHistogram()->SetTitleSize(0.07, "XYZT");
+    c3->cd(7); graph=createProfile(residuals_vs_z_svt, color, markerstyle, shift_z,0.5,fitType);graph->Draw(opt); graph->GetHistogram()->SetLabelSize(0.06, "XYZT"); graph->GetHistogram()->SetTitleSize(0.06, "XYZT");
     line->DrawLine(zmin,0,zmax,0);
-    c3->cd(10); graph=createProfile(residuals_vs_theta_svt, color, markerstyle, shift_tandip,0.5,fitType);graph->Draw(opt); graph->GetHistogram()->SetLabelSize(0.07, "XYZT"); graph->GetHistogram()->SetTitleSize(0.07, "XYZT");
+    c3->cd(10); graph=createProfile(residuals_vs_theta_svt, color, markerstyle, shift_tandip,0.5,fitType);graph->Draw(opt); graph->GetHistogram()->SetLabelSize(0.06, "XYZT"); graph->GetHistogram()->SetTitleSize(0.06, "XYZT");
     line->DrawLine(tandipmin,0,tandipmax,0);
     
     
-    c3->cd(2); graph=createProfile(residuals_vs_d0_bmtz, color, markerstyle, shift_d, 1.5,fitType);graph->Draw(opt);graph->GetHistogram()->SetLabelSize(0.07, "XYZT"); graph->GetHistogram()->SetTitleSize(0.07, "XYZT");
+    c3->cd(2); graph=createProfile(residuals_vs_d0_bmtz, color, markerstyle, shift_d, 1.5,fitType);graph->Draw(opt);graph->GetHistogram()->SetLabelSize(0.06, "XYZT"); graph->GetHistogram()->SetTitleSize(0.06, "XYZT");
     line->DrawLine(dmin,0,dmax,0);
-    c3->cd(5); graph=createProfile(residuals_vs_phi_bmtz, color, markerstyle, shift_phi, 1.5,fitType);graph->Draw(opt); graph->GetHistogram()->SetLabelSize(0.07, "XYZT"); graph->GetHistogram()->SetTitleSize(0.07, "XYZT");
+    c3->cd(5); graph=createProfile(residuals_vs_phi_bmtz, color, markerstyle, shift_phi, 1.5,fitType);graph->Draw(opt); graph->GetHistogram()->SetLabelSize(0.06, "XYZT"); graph->GetHistogram()->SetTitleSize(0.06, "XYZT");
     line->DrawLine(phimin,0,phimax,0);
-    c3->cd(8); graph=createProfile(residuals_vs_z_bmtz, color, markerstyle, shift_z, 1.5,fitType);graph->Draw(opt); graph->GetHistogram()->SetLabelSize(0.07, "XYZT"); graph->GetHistogram()->SetTitleSize(0.07, "XYZT");
+    c3->cd(8); graph=createProfile(residuals_vs_z_bmtz, color, markerstyle, shift_z, 1.5,fitType);graph->Draw(opt); graph->GetHistogram()->SetLabelSize(0.06, "XYZT"); graph->GetHistogram()->SetTitleSize(0.06, "XYZT");
     line->DrawLine(zmin,0,zmax,0);
-    c3->cd(11); graph=createProfile(residuals_vs_theta_bmtz, color, markerstyle, shift_tandip, 1.5,fitType);graph->Draw(opt); graph->GetHistogram()->SetLabelSize(0.07, "XYZT"); graph->GetHistogram()->SetTitleSize(0.07, "XYZT");
+    c3->cd(11); graph=createProfile(residuals_vs_theta_bmtz, color, markerstyle, shift_tandip, 1.5,fitType);graph->Draw(opt); graph->GetHistogram()->SetLabelSize(0.06, "XYZT"); graph->GetHistogram()->SetTitleSize(0.06, "XYZT");
     line->DrawLine(tandipmin,0,tandipmax,0);
     
-    c3->cd(3); graph=createProfile(residuals_vs_d0_bmtc, color, markerstyle, shift_d, 1.5,fitType);graph->Draw(opt); graph->GetHistogram()->SetLabelSize(0.07, "XYZT"); graph->GetHistogram()->SetTitleSize(0.07, "XYZT");
+    c3->cd(3); graph=createProfile(residuals_vs_d0_bmtc, color, markerstyle, shift_d, 1.5,fitType);graph->Draw(opt); graph->GetHistogram()->SetLabelSize(0.06, "XYZT"); graph->GetHistogram()->SetTitleSize(0.06, "XYZT");
     line->DrawLine(dmin,0,dmax,0);
-    c3->cd(6); graph=createProfile(residuals_vs_phi_bmtc, color, markerstyle, shift_phi, 1.5,fitType);graph->Draw(opt); graph->GetHistogram()->SetLabelSize(0.07, "XYZT"); graph->GetHistogram()->SetTitleSize(0.07, "XYZT");
+    c3->cd(6); graph=createProfile(residuals_vs_phi_bmtc, color, markerstyle, shift_phi, 1.5,fitType);graph->Draw(opt); graph->GetHistogram()->SetLabelSize(0.06, "XYZT"); graph->GetHistogram()->SetTitleSize(0.06, "XYZT");
     line->DrawLine(phimin,0,phimax,0);
-    c3->cd(9); graph=createProfile(residuals_vs_z_bmtc, color, markerstyle, shift_z, 1.5,fitType);graph->Draw(opt); graph->GetHistogram()->SetLabelSize(0.07, "XYZT"); graph->GetHistogram()->SetTitleSize(0.07, "XYZT");
+    c3->cd(9); graph=createProfile(residuals_vs_z_bmtc, color, markerstyle, shift_z, 1.5,fitType);graph->Draw(opt); graph->GetHistogram()->SetLabelSize(0.06, "XYZT"); graph->GetHistogram()->SetTitleSize(0.06, "XYZT");
     line->DrawLine(zmin,0,zmax,0);
-    c3->cd(12); graph=createProfile(residuals_vs_theta_bmtc, color, markerstyle, shift_tandip, 1.5,fitType);graph->Draw(opt); graph->GetHistogram()->SetLabelSize(0.07, "XYZT"); graph->GetHistogram()->SetTitleSize(0.07, "XYZT");
+    c3->cd(12); graph=createProfile(residuals_vs_theta_bmtc, color, markerstyle, shift_tandip, 1.5,fitType);graph->Draw(opt); graph->GetHistogram()->SetLabelSize(0.06, "XYZT"); graph->GetHistogram()->SetTitleSize(0.06, "XYZT");
     //c3->cd(12);residuals_vs_theta_bmtc->Draw(opt);
     line->DrawLine(tandipmin,0,tandipmax,0);
     
