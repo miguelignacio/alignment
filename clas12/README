@@ -1,6 +1,14 @@
-to run the scripts in this folder, you will need the software packages:
-1)  clas12-offline-software:
-# contains the code for reconstructing CLAS-12 data
+This folder contains scripts to perform the following tasks involved in clas12 CVT alignment:
+1) filtering CLAS12 raw-data files to only include the events used for CLAS12 CVT alignment
+2) running reconstruction on CLAS12 data
+3) running the alignment on the reconstructed CLAS12 data
+4) modifying the calibration-conditions database (ccdb) after alignment
+5) creating diagnostic plots of the reconstruction and alignment performance.
+6) Automating #2-#5 in an iterative process.  
+
+
+Before running the scripts in this package, you will need the following software packages:
+1) clas12-offline-software:  This package contains the code for reconstructing CLAS-12 data.  You will need to use the dev-align3 branch, which contains added functionality for extracting information needed for running alignment.  After downloading the project and checking out the correct branch, you will need to compile the package.  
 # download the software
 git clone https://github.com/JeffersonLab/clas12-offline-software/
 # checkout the dev-align3 branch (where the pre-alignment matrix-extraction is implemented)
@@ -9,28 +17,62 @@ git checkout dev-align3
 # build the package
 ./build-coatjava.sh
 # add this line to your .bashrc, .cshrc, .bash_profile, or equivalent.  replace /path/to with the
-# appropriate path to the clas12-offline-software installation directory
-export PATH=$PATH:/path/to/clas12-offline-software/coatjava/binclas12-offline-software/coat-java
+# appropriate path to the clas12-offline-software installation directory.  In the example shown below,
+# clas12-offline-software is in the home directory
+export PATH=$PATH:~/clas12-offline-software/coatjava/bin
+
 2)  ccdb:  calibration conditions database package for clas12
 # check out package:
 git clone git@github.com:JeffersonLab/ccdb.git ccdb
-# add this to your .bashrc or equivalent:
+# add the following line to your ~/.bashrc (Linux) or ~/.bash_profile (MacOS) file:
 source /path/to/ccdb/environment.bash
 
-The initial ccdb conditions that I use are located on the JLab CUE system at /work/clas12/users/gotra/ccdb/clas12_cvtalign_maxime_05142020_6342.sqlite
-Copy this to somewhere on your computer, and then put these lines in your .bashrc (modifying the username and location accordingly):
+The initial ccdb conditions that I use are located on the JLab CUE system at /work/clas12/users/gotra/ccdb/clas12_cvtalign_maxime_05142020_6342.sqlite.
+Copy this file to somewhere on your computer.  Then, add the following lines in your ~/.bashrc (Linux) or ~/.bash_profile (MacOS), modifying the username and file location accordingly:
 export CCDB_CONNECTION=sqlite:////Users/spaul/clas12/sql/clas12_cvtalign_maxime_05142020_6342.sqlite
 export CCDB_USER=spaul
 
-To compile the various utils in this folder do the following:
+Then run the following line of code in your console:
+source ~/.bashrc # if you are using Linux
+OR
+source ~/.bash_profile # if you are using MacOS
+
+3)  If you haven't already done so, compile Martin Weber's alignment code (one folder up from this one).  
+
+4)  Finally, To compile the various utils in this folder (clas12) do the following:
 ./compile_clas12_cvt_utils.sh
 
 
-The input files can be found on the jlab cue system on the hblin4 computer at /storage/cvt/alignment/cosmic-runs (cosmic) and /storage/cvt/alignment/alignment-runs (field-off tracks from target).
-Copy the files for runs 6342 (field-off) and 6117 (cosmics) to your computer.
-Modify the script alignment/clas12/scripts/recon_and_filter.sh to use the correct file locations where your input files are located.  This script will create a skimmed version of the files, so that the recon part of the alignment cycle will run much faster.  When running this on cosmic files, make sure to modify the recon_for_filter.yaml to set 'cosmics: "true"'.
+To perform alignment:
 
-The folder alignment/clas12/scripts/generic contains scripts for running cycles of event reconstruction, KAA, and CCDB updates.  These are all based on iterate.sh, and use environmental variables to specify which parts of the CLAS12 CVT and which alignment variables to align at any given stage.  A full description of this folder is found in alignment/clas12/scripts/generic/README
+First obtain the input files.  For the RGB spring 2019 run period, the runs needed for alignment are 6342 (field-off tracks from the target) and 6117 (cosmic tracks).  These (or the equivalent files from a different run group) need to be copied to the local machine, and then preprocessed.   The preprocessing includes
+1) updating the hipo index to include banks defined in the dev-align3 branch of clas12-offline-software
+2) running a preliminary reconstruction
+3) filtering out events that are not relevant for CVT alignment
+4) removing the preliminary reconstruction information.  
 
+To preprocess a file, do the following commands
+cd scripts/misc/
+./preprocess.sh input.hipo output.hipo
+(or "./preprocess.sh input.hipo output.hipo --cosmic" if the file is a cosmics data file)
+
+One can alternatively use an evio file for input.
+
+
+After preprocessing the files, you can then use these files for alignment.  Go to the "generic" scripts folder, where the scripts for running iterations of recon, KAA and ccdb updates can be found.  
+cd scripts/generic
+
+Then, copy the file ./iterate_for_paper.sh to another name
+cp ./iterate_for_paper.sh ./iterate_custom.sh
+Edit the file ./iterate_custom.sh and change the names of the input field-off and cosmic files used.  Other options can be edited as well.  
+
+Below are the lines that should be modified, which set the locations of the files used for input and for the ccdb.  zf stands for "Zero [magnetic] field", and refers to the file with tracks from the target with the solenoid turned off.  To run reconstruction with only cosmics or only field-off tracks from the target, set the other input file name to be blank.  
+
+export input_file_zf=$HOME/input_for_alignment/fieldoff_6342.hipo 
+export input_file_cosmics=$HOME/input_for_alignment/cosmic_6117.hipo  
+export CCDB_CONNECTION=sqlite:///$HOME/input_for_alignment/ccdb_2022-01-16.sqlite
+
+
+Running ./iterate_custom.sh will begin the iterative process.   Folders with names plots_pass_1, etc will be created in the clas12/scripts/generic directory.  These will contain the reconstructed hipo files, the input file for the KAA, the output of the KAA, text files with the new alignment parameters, and a large number of diagnostic plots, produced in each iteration.  The final alignment parameters can be found in plot_pass_N/devN_bmt.txt and plot_pass_N/devN_svt.txt, where N is the number of iterations specified in the iteration script.  
 
 
