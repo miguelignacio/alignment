@@ -21,8 +21,8 @@ git checkout dev-align3
 # clas12-offline-software is in the home directory
 export PATH=$PATH:~/clas12-offline-software/coatjava/bin
 
-2)  ccdb:  calibration conditions database package for clas12
-# check out package:
+2)  ccdb:  calibration conditions database package for clas12. 
+# check out package from git.  (
 git clone git@github.com:JeffersonLab/ccdb.git ccdb
 # add the following line to your ~/.bashrc (Linux) or ~/.bash_profile (MacOS) file:
 source /path/to/ccdb/environment.bash
@@ -36,6 +36,8 @@ Then run the following line of code in your console:
 source ~/.bashrc # if you are using Linux
 OR
 source ~/.bash_profile # if you are using MacOS
+
+To test the ccdb installation, try running "ccdb -i".  If this brings up an error message (which it does on some computers), then unzip and untar the file ccdb.tar.gz that is in this folder, and replace the ccdb utility from the github repository with the one from the tar.gz file.  Hopefully "ccdb -i" works when using this version of the ccdb utility.  
 
 3)  If you haven't already done so, compile Martin Weber's alignment code (one folder up from this one).  
 
