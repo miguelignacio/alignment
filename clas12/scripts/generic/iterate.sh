@@ -1,5 +1,7 @@
 thisdir=`pwd`
-cp align_default.yaml align.yaml
+
+if [[ -z "${yaml_file}" ]] ; then yaml_file=align_default.yaml ; fi
+cp ${yaml_file} align.yaml
 
 set_variation(){
     variation=$1
@@ -15,7 +17,7 @@ set_config(){
 set_cosmics(){
     cosmics=$1
     cp align.yaml tmp.yaml
-    cat tmp.yaml |  sed 's/cosmics:\ *".*"/cosmics:\ "'${cosmics}'"/g' > align.yaml
+    cat tmp.yaml |  sed 's/cosmics:\ *".*"/cosmics:\ "'${cosmics}'"/g'  > align.yaml
 }
 
 compile(){
@@ -85,7 +87,11 @@ do
     elif [[ -z "${input_file_cosmics}" ]]; then
 	cp ${thisdir}/${plotsdir}/prealign_zf.hipo ${thisdir}/${plotsdir}/prealign.hipo
     else
-	hipo-utils -merge -o ${thisdir}/${plotsdir}/prealign.hipo ${thisdir}/${plotsdir}/prealign_zf.hipo ${thisdir}/${plotsdir}/prealign_cosmics.hipo
+	if $cosmicfirst == "true"; then
+            hipo-utils -merge -o ${thisdir}/${plotsdir}/prealign.hipo ${thisdir}/${plotsdir}/prealign_cosmics.hipo ${thisdir}/${plotsdir}/prealign_zf.hipo
+	else
+	    hipo-utils -merge -o ${thisdir}/${plotsdir}/prealign.hipo ${thisdir}/${plotsdir}/prealign_zf.hipo ${thisdir}/${plotsdir}/prealign_cosmics.hipo
+	fi
     fi
     
     

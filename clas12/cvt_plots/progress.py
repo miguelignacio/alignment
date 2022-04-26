@@ -2,7 +2,7 @@ import ROOT, numpy as np, pandas as pd
 import sys
 n = 6
 
-indir = "~/alignment/clas12/scripts/generic/cache/data_noLC"
+indir = "~/alignment/clas12/scripts/generic/"
 if len(sys.argv)>1:
     indir=sys.argv[1]
 if len(sys.argv)>2:
@@ -25,7 +25,7 @@ for i in range(0,n):
     means.append(AlignTree.GetHistogram().GetMean())
     hists.append(AlignTree.GetHistogram().Clone())
 print(means)
-h = ROOT.TH1D("h", "#chi^{2} progress;iteration;#chi^{2}", n, 0.5, n+.5)
+h = ROOT.TH1D("h", "#chi^{2} progress;n;#LT#chi^{2}/dof#GT after n iterations", n, -0.5, n-.5)
 for i in range(0,n):
     h.SetBinContent(i+1, means[i])
 h.SetMarkerStyle(21)
@@ -36,4 +36,4 @@ h2.Draw("SAME P")
 ROOT.gStyle.SetOptStat(0)
 
 ROOT.gPad.Draw()
-ROOT.gPad.SaveAs("chi2 progress.pdf")
+ROOT.gPad.SaveAs("chi2_progress.pdf")

@@ -189,6 +189,14 @@ int main(int argc, char * argv[]) {
   AlignEvent *aevent = new AlignEvent();
   TTree *AlignTree = (TTree*)inputFile->Get("AlignTree");
   AlignTree->SetBranchAddress("AlignEvent", & aevent);
+  float centroids[24];
+  AlignTree->SetBranchAddress("centroid", centroids);
+  float x[24];
+  AlignTree->SetBranchAddress("x", x);
+  float y[24];
+  AlignTree->SetBranchAddress("y", y);
+  float z[24];
+  AlignTree->SetBranchAddress("z", z);
   // auto save every MB
   //AlignTree->SetAutoSave(1000000);
 
@@ -317,6 +325,18 @@ int main(int argc, char * argv[]) {
     //h->SetPadLeftMargin(0.14);
     //h->SetPadBottomMargin(0.14);
   }
+  //centroid vs residual
+  TH2* cr_svt = new TH2D("cr_svt", "SVT;cluster centroid;residual [mm]", 100, 0, 300, 100, -0.5, 0.5);
+  TH2* cr_bmtz = new TH2D("cr_bmtz", "BMTZ;cluster centroid;residual [mm]", 100, 0, 800, 100, -1.5, 1.5);
+  TH2* cr_bmtc = new TH2D("cr_bmtc", "BMTC;cluster centroid;residual [mm]", 100, 0, 1200, 100, -1.5, 1.5);
+
+  TH2* z_svt = new TH2D("z_svt", "SVT;z [cm];residual [mm]", 100, -25, 25, 100, -0.5, 0.5);
+  TH2* z_bmtz = new TH2D("z_bmtz", "BMTZ;z [cm];residual [mm]", 100, -25, 25, 100, -1.5, 1.5);
+  TH2* z_bmtc = new TH2D("z_bmtc", "BMTC;z [cm];residual [mm]", 100, -25, 25, 100, -1.5, 1.5);
+
+  TH2* phi_svt = new TH2D("phi_svt", "SVT;phi [deg];residual [mm]", 100, -180, 180, 100, -0.5, 0.5);
+  TH2* phi_bmtz = new TH2D("phi_bmtz", "BMTZ;phi [deg];residual [mm]", 100, -180, 180, 100, -1.5, 1.5);
+  TH2* phi_bmtc = new TH2D("phi_bmtc", "BMTC;phi [deg];residual [mm]", 100, -180, 180, 100, -1.5, 1.5);
   
   int ndof =0;
   float chi2 =0;
@@ -403,7 +423,38 @@ int main(int argc, char * argv[]) {
       hextrap->Fill((*aevent->GetTrackPrediction())(j));
       hmeasextrap->Fill((*aevent->GetMeasurements())(j),(*aevent->GetTrackPrediction())(j));
       double resid = (*aevent->GetMeasurements())(j)-(*aevent->GetTrackPrediction())(j);
-      
+      if(centroids[j]>-1000){
+      if(module<84){
+	cr_svt->Fill(centroids[j], resid);
+	z_svt->Fill(z[j], resid);
+        phi_svt->Fill(180/3.14159*atan2(y[j],x[j]), resid);
+      }
+      else if (module<87){
+	cr_bmtc->Fill(centroids[j],resid);
+	z_bmtc->Fill(z[j], resid);
+	phi_bmtc->Fill(180/3.14159*atan2(y[j],x[j]), resid);
+      }
+      else if (module<93){
+	cr_bmtz->Fill(centroids[j],resid);
+	z_bmtz->Fill(z[j], resid);
+	phi_bmtz->Fill(180/3.14159*atan2(y[j],x[j]), resid);
+      }
+      else if (module<96){
+	cr_bmtc->Fill(centroids[j],resid);
+	z_bmtc->Fill(z[j], resid);
+	phi_bmtc->Fill(180/3.14159*atan2(y[j],x[j]), resid);
+      }
+      else if (module<99){
+	cr_bmtz->Fill(centroids[j],resid);
+	z_bmtz->Fill(z[j], resid);
+	phi_bmtz->Fill(180/3.14159*atan2(y[j],x[j]), resid);
+      }
+      else if (module<102){
+	cr_bmtc->Fill(centroids[j],resid);
+	z_bmtc->Fill(z[j], resid);
+	phi_bmtc->Fill(180/3.14159*atan2(y[j],x[j]), resid);
+      }
+    }
       //residual vs residual plots
       for (int jj =0;jj<module1_resid_vs_resid.size(); jj++){
         if (module != module1_resid_vs_resid[jj])
@@ -647,7 +698,42 @@ int main(int argc, char * argv[]) {
     }
     c2->SaveAs(plotsDir+"/residuals_vs_residuals.pdf");
     
-    
+    TCanvas* c3 = new TCanvas("c1", "c1", 1800, 600);
+    c3->Divide(3,1);
+
+    gStyle->SetOptStat(0);
+    c3->cd(1);
+    cr_svt->Draw("COLZ");
+    c3->cd(2);
+    cr_bmtz->Draw("COLZ");
+    c3->cd(3);
+    cr_bmtc->Draw("COLZ");
+
+
+    c3->SaveAs(plotsDir+"/residuals_vs_centroid.pdf");
+    c3->SaveAs(plotsDir+"/residuals_vs_centroid.png");
+
+    c3->cd(1);
+    z_svt->Draw("COLZ");
+    c3->cd(2);
+    z_bmtz->Draw("COLZ");
+    c3->cd(3);
+    z_bmtc->Draw("COLZ");
+
+
+    c3->SaveAs(plotsDir+"/residuals_vs_z.pdf");
+    c3->SaveAs(plotsDir+"/residuals_vs_z.png");
+
+    c3->cd(1);
+    phi_svt->Draw("COLZ");
+    c3->cd(2);
+    phi_bmtz->Draw("COLZ");
+    c3->cd(3);
+    phi_bmtc->Draw("COLZ");
+
+
+    c3->SaveAs(plotsDir+"/residuals_vs_phi.pdf");
+    c3->SaveAs(plotsDir+"/residuals_vs_phi.png");
   }
   
   
