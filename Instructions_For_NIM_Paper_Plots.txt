@@ -12,14 +12,14 @@ git checkout dev-align3  #special branch in which the recon includes additional 
 ./build-coatjava.sh
 2) download the input folder:
 cd ~
-scp -r scigw.jlab.org:/work/spaul/clas12/input_for_alignment .
+scp -r scigw.jlab.org:/work/clas12/spaul/input_for_alignment .
 3) Install ccdb, 
 cd ~
 git clone https://github.com/JeffersonLab/ccdb/
 4)  Change the first line of ccdb/bin/ccdb from "#!/usr/bin/env python2" to "#!/usr/bin/env python3".   
 5) Add the following lines to your ~/.bashrc file (~/.bash_profile on MacOS), and then run "source ~/.bashrc".
 export PATH=$PATH:$HOME/clas12-offline-software/coatjava/bin:$HOME/ccdb/bin/
-export CCDB_CONNECTION=sqlite:///${HOME}/input_for_alignment/ccdb_2021-12-12.sqlite
+export CCDB_CONNECTION=sqlite:///${HOME}/input_for_alignment/ccdb_2022-01-02-6342-devbs8.sqlite
 6)  Add yourself as a user on the ccdb file
 ccdb user --create $USER
 7)  Follow the README in the alignment project for instructions to compile the KAA software.  It is unnecesary to install CLHEP, since it is only used by the the builtin "simulation" subpackage, which is not necessary for this project.

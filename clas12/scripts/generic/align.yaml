@@ -8,6 +8,10 @@ io-services:
 services:
   - class: org.jlab.clas.swimtools.MagFieldsEngine
     name: MAGFIELDS
+#  - class: org.jlab.service.ctof.CTOFEngine
+#    name: CTOF
+#  - class: org.jlab.service.cnd.CNDCalibrationEngine
+#    name: CND
   - class: org.jlab.rec.cvt.services.CVTRecNewKF
     name: CVT
   - class: org.jlab.rec.cvt.services.CVTAlignment
@@ -22,26 +26,38 @@ configuration:
       #magfieldSolenoidScale: "0.00001"
       magfieldTorusMap: Full_torus_r251_phi181_z251_08May2018.dat
       variation: rga_fall2018
+    SWAPS:
+       timestamp: 10/13/2020
+       previousTimestamp: 08/10/2020
+       detectors: "BMT"
+       modifyBanks: "true"
+    #CTOF:
+    #  variation: rga_fall2018
+    #CND:
+    #  variation: rga_fall2018
     CVT:
       cosmics: "true"
       svtOnly: "false"
-      variation: "dev17"
-      #minHitTimeBMT:  "50"
-      #maxHitTimeBMT:  "380"
-      #minHitTimeSVT:  "34"
-      #maxHitTimeSVT:  "180"
-      #excludeLayers: "7,8,9,10,11,12"
+      variation: "dev_bs4"
+      beamSpotConst: "2"
+      timeCuts: "true"
+      kfIterations: "1"
+      
     ALIGN:
-      variation: "dev17"
+      variation: "dev_bs4"
       svtOnly: "false"
       bmtOnly: "false"
       svtAlignTopBottomSeparately: "true"
       alignVariables: "TxTyTzRxRyRz"
-      maxDocaCut: "100"
+      #maxDocaCut: "100"
       cosmics: "true"
-      maxResidualSVT: "1"
-      maxResidualBMTZ: "3"
-      maxResidualBMTC: "3"
+      minClustersSVT: "4"
+      minClustersBMTZ: "2"
+      minClustersBMTC: "3"
+      maxResidualSVT: "2"
+      maxResidualBMTZ: "7"
+      maxResidualBMTC: "2"
       debug: "false"
+      useBeamspot: "true"
 mime-types:
   - binary/data-hipo

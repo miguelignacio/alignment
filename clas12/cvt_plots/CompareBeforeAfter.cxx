@@ -260,7 +260,7 @@ TGraphErrors* createProfile(TH2D * h, int color, int markerstyle, double shift,d
     }
     chi2+=mu*mu/(dmu*dmu);
   }
-  gStyle->SetTitleFontSize(0.09);
+  gStyle->SetTitleFontSize(0.08);
   TGraphErrors * profile = new TGraphErrors(n, x, y, ex, ey);
   profile->SetMarkerStyle(markerstyle);
 //profile->SetMarkerSize(1);
@@ -302,10 +302,14 @@ int main(int argc, char * argv[]) {
   TString label ="";
   bool isMC = 0;
   int fitType = 1;
+  double scaleWindows=1;
   for(Int_t i=1;i<argc;i++){
     TString opt=argv[i];
     if((opt.Contains("--before="))){
       inputFileNameBefore=opt(9,opt.Sizeof());
+    }
+    if((opt.Contains("--scaleWindows="))){
+      scaleWindows=((TString)opt(15,opt.Sizeof())).Atof();
     }
     if((opt.Contains("--after="))){
       inputFileNameAfter=opt(8,opt.Sizeof());
@@ -405,9 +409,9 @@ int main(int argc, char * argv[]) {
     gStyle->SetLabelSize(0.05, "XYZT");
     TH1F*  hchi2ndof = new TH1F("hchi2ndof"+suffix, "track #chi^{2}/ndof;track #chi^{2}/n_{dof};# of tracks", 100, 0, 20);
     
-    TH1F* residuals_svt = new TH1F ("res_svt"+suffix, "SVT residuals;residual [mm];# of clusters", 100, -1.0, 1.0);
-    TH1F* residuals_bmtz = new TH1F ("res_bmtz"+suffix, "BMTZ residuals;residual [mm];# of clusters", 100, -4.0, 4.0);
-    TH1F* residuals_bmtc = new TH1F ("res_bmtc"+suffix, "BMTC residuals;residual [mm];# of clusters", 100, -2.0, 2.0);
+    TH1F* residuals_svt = new TH1F ("res_svt"+suffix, "SVT residuals;residual [mm];# of clusters", 100, -1.0*scaleWindows, 1.0*scaleWindows);
+    TH1F* residuals_bmtz = new TH1F ("res_bmtz"+suffix, "BMTZ residuals;residual [mm];# of clusters", 100, -4.0*scaleWindows, 4.0*scaleWindows);
+    TH1F* residuals_bmtc = new TH1F ("res_bmtc"+suffix, "BMTC residuals;residual [mm];# of clusters", 100, -2.0*scaleWindows, 2.0*scaleWindows);
 
     hchi2ndof->GetYaxis()->SetMaxDigits(3);
     residuals_svt->GetYaxis()->SetMaxDigits(3);
@@ -705,24 +709,28 @@ int main(int argc, char * argv[]) {
     
     c1->cd(1);
     //legend1->AddEntry(residuals_svt, Form(suffix + ",\n RMS = %.2f mm, fit #sigma = %.3f mm",residuals_svt->GetRMS(), getSigma(residuals_svt)),"l");
-    legend1->AddEntry(residuals_svt, Form(suffix + ",\n mean = %.0f #mum, std = %.0f #mum",1000*getMeanTruncated(residuals_svt), 1000*getStdTruncated(residuals_svt),"l")); 
+    legend1->AddEntry(residuals_svt, Form(suffix + ",\n mean = %.0f #mum, std = %.0f #mum",1000*getMeanTruncated(residuals_svt), 1000*getStdTruncated(residuals_svt),"l"));
+    residuals_svt->SetTitleSize(0.05, "T");  
     residuals_svt->Draw(opt);
     residuals_svt->SetMaximum(residuals_svt->GetMaximum()*(isMC ? 7 : 5.5));
     c1->cd(2);
     //legend2->AddEntry(residuals_bmtz, Form(suffix + ",\n RMS = %.2f mm, fit #sigma = %.2f mm",residuals_bmtz->GetRMS(), getSigma(residuals_bmtz)),"l");
     legend2->AddEntry(residuals_bmtz, Form(suffix + ",\n mean = %.0f #mum, std = %.0f #mum",getMeanTruncated(residuals_bmtz)*1000, 1000*getStdTruncated(residuals_bmtz),"l"));
+    residuals_bmtz->SetTitleSize(0.05, "T");
     residuals_bmtz->Draw(opt);
     residuals_bmtz->SetMaximum(residuals_bmtz->GetMaximum()*(isMC ? 9 : 7));
     c1->cd(3);
     //legend3->AddEntry(residuals_bmtc, Form(suffix+ ",\n RMS = %.2f mm, fit #sigma = %.2f mm",residuals_bmtc->GetRMS(), getSigma(residuals_bmtc)), "l");
     legend3->AddEntry(residuals_bmtc, Form(suffix+ ",\n mean = %.0f #mum, std = %.0f #mum",1000*getMeanTruncated(residuals_bmtc), 1000*getStdTruncated(residuals_bmtc), "l"));
+    residuals_bmtc->SetTitleSize(0.05, "T");
     residuals_bmtc->Draw(opt);
     residuals_bmtc->SetMaximum(residuals_bmtc->GetMaximum()*(isMC ? 3 : 3.5));
     c1->cd(4);
     legend4->AddEntry(hchi2ndof, Form(suffix+", mean = %.1f",hchi2ndof->GetMean()),"l");
     hchi2ndof->SetMaximum(hchi2ndof->GetMaximum()*(isMC ? 21 : 16));
+    hchi2ndof->SetTitleSize(0.05, "T");
     hchi2ndof->Draw(opt);
-    
+
    
     
     opt = before_after ? "SP" : "AP";

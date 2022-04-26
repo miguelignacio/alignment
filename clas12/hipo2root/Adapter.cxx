@@ -150,9 +150,14 @@ int main(int argc, char * argv[]) {
   AlignTree->Branch("q3",&q3,"q3/F");
 
   float centroid[24]; //centroids of the clusters
-  
-  AlignTree->Branch("centroid", &centroid, "centroid/[24]F");
-  
+  float x[24];
+  float y[24];
+  float z[24];
+  AlignTree->Branch("centroid", &centroid, "centroid[24]/F");
+  AlignTree->Branch("x", &x, "x[24]/F");
+  AlignTree->Branch("y", &y, "y[24]/F");
+  AlignTree->Branch("z", &z, "z[24]/F");
+
   // auto save every MB
   AlignTree->SetAutoSave(1000000);
   
@@ -225,26 +230,53 @@ int main(int argc, char * argv[]) {
 
 	//get the clusters' centroid strip number from the trajectory bank
 	int trackid = bank_misc.getInt(bank_misc.getSchema().getEntryOrder("track"),i);
-	int k = 0;
-	for(int j =0; j<bank_trajectory.getRows(); j++){
-	  if(trackid != bank_trajectory.getShort(bank_trajectory.getSchema().getEntryOrder("id"),j))
-	    continue;
-	  centroid[k]=bank_trajectory.getFloat(bank_trajectory.getSchema().getEntryOrder("centroid"),j);
-	  k+=1;
+	//	cout << endl;
+	for(int k = 0; k<bank_I.getInt(bank_I.getSchema().getEntryOrder("rows"),i);k++){
+	  int found = 0;
+	  for(int j =0; j<bank_trajectory.getRows(); j++){
+	    if(trackid != bank_trajectory.getShort(bank_trajectory.getSchema().getEntryOrder("id"),j))
+	      continue;
+	    int module = aevent->GetIndex()->At(k);
+	    int detector = bank_trajectory.getShort(bank_trajectory.getSchema().getEntryOrder("detector"),j);
+	    int	layer = bank_trajectory.getShort(bank_trajectory.getSchema().getEntryOrder("layer"),j)-1;
+	    int sector=bank_trajectory.getShort(bank_trajectory.getSchema().getEntryOrder("sector"),j)-1;
+	    if (detector !=5)
+	      continue;
+	    //if (detector ==4)
+	      // layer=(layer==1)*3+(layer==2)*5;
+	    //if (detector==3)
+	    // layer=(layer==0)*1+(layer==1)*2+(layer==2)*4;
+	    int module2 = layer<6? ((layer%2)*42+(layer>3)*14+(layer>1)*10+sector) :  (84+(layer-6)*3+sector);
+
+	    if (module2==module){
+	      centroid[k]=bank_trajectory.getFloat(bank_trajectory.getSchema().getEntryOrder("centroid"),j);
+	      x[k]=bank_trajectory.getFloat(bank_trajectory.getSchema().getEntryOrder("x"),j);
+	      y[k]=bank_trajectory.getFloat(bank_trajectory.getSchema().getEntryOrder("y"),j);
+	      z[k]=bank_trajectory.getFloat(bank_trajectory.getSchema().getEntryOrder("z"),j);
+	      found =1;
+	      break;
+	    }
+	  }
+	  if (!found){
+	    centroid[k] = -9999;
+	    z[k] = -9999;
+	    y[k] = -9999;
+	    x[k] = -9999;
+	  }
 	}
 	
-        //TVectorD* q;
-        //getFromBank(q, bank_q,i);
-        //cout << "checkpoint1" <<endl;
-        //cout << bank_q.getSchema().getEntryOrder("element_0_0") << " " << bank_q.getSchema().getEntryOrder("element_1_0") << " " << bank_q.getSchema().getEntryOrder("element_2_0") << " " << bank_q.getSchema().getEntryOrder("element_3_0") << endl;
-        q0 = bank_q.getFloat(bank_q.getSchema().getEntryOrder("element_0_0"),i);
-        q1 = bank_q.getFloat(bank_q.getSchema().getEntryOrder("element_1_0"),i);
-        q2 = bank_q.getFloat(bank_q.getSchema().getEntryOrder("element_2_0"),i);
-        q3 = bank_q.getFloat(bank_q.getSchema().getEntryOrder("element_3_0"),i);
-        //cout << q0 << " " << q1 << " " << q2 << " " << q3 << endl;
+      //TVectorD* q;
+      //getFromBank(q, bank_q,i);
+      //cout << "checkpoint1" <<endl;
+      //cout << bank_q.getSchema().getEntryOrder("element_0_0") << " " << bank_q.getSchema().getEntryOrder("element_1_0") << " " << bank_q.getSchema().getEntryOrder("element_2_0") << " " << bank_q.getSchema().getEntryOrder("element_3_0") << endl;
+      q0 = bank_q.getFloat(bank_q.getSchema().getEntryOrder("element_0_0"),i);
+      q1 = bank_q.getFloat(bank_q.getSchema().getEntryOrder("element_1_0"),i);
+      q2 = bank_q.getFloat(bank_q.getSchema().getEntryOrder("element_2_0"),i);
+      q3 = bank_q.getFloat(bank_q.getSchema().getEntryOrder("element_3_0"),i);
+      //cout << q0 << " " << q1 << " " << q2 << " " << q3 << endl;
         //cout << "checkpoint2" <<endl;
-        AlignTree->Fill();
-        
+      AlignTree->Fill();
+      
         
       }
     }
