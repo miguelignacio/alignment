@@ -1,5 +1,17 @@
 thisdir=`pwd`
 
+if [[ -z "${CCDB_USER}"]]; then
+    echo error:  environmental variable CCDB_USER must be set
+    exit 0
+fi
+
+#add user to list of users in the CCDB
+if [[ `ccdb user --list` != *${CCDB_USER}* ]]; then
+    ccdb user --create $CCDB_USER
+fi
+
+
+
 if [[ -z "${yaml_file}" ]] ; then yaml_file=align_default.yaml ; fi
 cp ${yaml_file} align.yaml
 
