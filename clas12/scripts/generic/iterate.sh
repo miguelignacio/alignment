@@ -34,9 +34,11 @@ set_cosmics(){
 
 compile(){
     #recompile matrix extraction
-    cd ~/clas12-offline-software/reconstruction/cvt/;                                                         
+    c12os=`dirname \`which hipo-utils\``/../..;
+    
+    cd ${c12os}/cvt/;                                                         
     mvn -o clean package -DskipTests ;                                                                        
-    cp ~/clas12-offline-software/reconstruction/cvt/target/clas12detector-cvt-1.0-SNAPSHOT.jar ~/clas12-offline-software/coatjava/lib/services/;
+    cp ${c12os}/reconstruction/cvt/target/clas12detector-cvt-1.0-SNAPSHOT.jar ${c12os}/coatjava/lib/services/;
     cd ${thisdir};
 }
 if $recompile == "true"; then
@@ -107,7 +109,7 @@ do
     fi
     
     
-    cd ~/alignment/clas12/hipo2root; #make clean Adapter;
+    cd ${thisdir}/../../hipo2root; #make clean Adapter;
     ./Adapter ${thisdir}/${plotsdir}/prealign.hipo --out=${thisdir}/${plotsdir}/prealign.root &
 
     ./Adapter ${thisdir}/${plotsdir}/prealign_zf.hipo --out=${thisdir}/${plotsdir}/prealign_zf.root &
@@ -143,7 +145,7 @@ do
     #exit 0
     
     cd ${thisdir}/${plotsdir}
-    ~/alignment/validation/validation ../cfg/validation.cfg &
+    ${thisdir}/../../../validation/validation ../cfg/validation.cfg &
 
     wait #run validation, post-alignment plots, and comparison plots simultaneously
     
