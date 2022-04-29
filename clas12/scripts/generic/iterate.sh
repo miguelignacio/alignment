@@ -1,12 +1,12 @@
 thisdir=`pwd`
 
-if [[ -z "${CCDB_USER}"]]; then
+if [[ -z "${CCDB_USER}" ]] ; then
     echo error:  environmental variable CCDB_USER must be set
     exit 0
 fi
 
 #add user to list of users in the CCDB
-if [[ `ccdb user --list` != *${CCDB_USER}* ]]; then
+if [[ `ccdb user --list` != *${CCDB_USER}* ]] ; then
     ccdb user --create $CCDB_USER
     echo "iterate.sh automatically adding user "$CCDB_USER" to the ccdb sqlite"
 fi
