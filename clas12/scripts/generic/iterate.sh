@@ -12,7 +12,7 @@ if [[ `ccdb user --list` != *${CCDB_USER}* ]] ; then
 fi
 
 #check if CCDB_CONNECTION environmental variable is set.  TODO: add more statements like this.
-if [[ -z "${CCDB_CONNECTION}"]]; then
+if [[ -z "${CCDB_CONNECTION}" ]] ; then
     echo "error:  Env. variable CCDB_CONNECTION is not defined. Exiting"
     exit 0
 fi
