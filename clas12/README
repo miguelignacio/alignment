@@ -7,8 +7,15 @@ This folder contains scripts to perform the following tasks involved in clas12 C
 6) Automating #2-#5 in an iterative process.  
 
 
-Before running the scripts in this package, you will need the following software packages:
-1) clas12-offline-software:  This package contains the code for reconstructing CLAS-12 data.  You will need to use the dev-align3 branch, which contains added functionality for extracting information needed for running alignment.  After downloading the project and checking out the correct branch, you will need to compile the package.  
+Before running the scripts in this package, you will need the following software packages.  The first 5 are common ones that you may already have installed on your computer for other projects, and can probably find the installation instructions on Google. The others are very specific ones.
+1) Java.  A programming language.  The installed version must be a JDK (java development kit, which is capable of both compiling and executing java), and not a JRE (java runtime environment, which can only execute java).
+2) Maven.  This is a program maintained by Apache that is used for organizing the code when compilating large Java projects.  
+3) ROOT.  A CERN-maintained library for performing analyses and creating plots.
+4) Python.  A programming language
+5) Scons.  A software construction tool.
+
+Very specific packages.  
+6) clas12-offline-software:  This package contains the code for reconstructing CLAS-12 data.  You will need to use the dev-align3 branch, which contains added functionality for extracting information needed for running alignment.  After downloading the project and checking out the correct branch, you will need to compile the package.  
 # download the software
 git clone https://github.com/JeffersonLab/clas12-offline-software/
 # checkout the dev-align3 branch (where the pre-alignment matrix-extraction is implemented)
@@ -21,27 +28,48 @@ git checkout dev-align3
 # clas12-offline-software is in the home directory
 export PATH=$PATH:~/clas12-offline-software/coatjava/bin
 
-2)  ccdb:  calibration conditions database package for clas12. 
-# check out package from git.  (
-git clone git@github.com:JeffersonLab/ccdb.git ccdb
-# add the following line to your ~/.bashrc (Linux) or ~/.bash_profile (MacOS) file:
-source /path/to/ccdb/environment.bash
+7)  ccdb:  calibration conditions database package for clas12. 
 
-The initial ccdb conditions that I use are located on the JLab CUE system at /work/clas12/users/gotra/ccdb/clas12_cvtalign_maxime_05142020_6342.sqlite.
-Copy this file to somewhere on your computer.  Then, add the following lines in your ~/.bashrc (Linux) or ~/.bash_profile (MacOS), modifying the username and file location accordingly:
-export CCDB_CONNECTION=sqlite:////Users/spaul/clas12/sql/clas12_cvtalign_maxime_05142020_6342.sqlite
-export CCDB_USER=spaul
+First, you must obtain the most recent snapshot (sqlite) of the CCDB and copy to somewhere on your local computer.  The following steps will accomplish this:
+
+#find out what the latest version of the CCDB snapshot is
+version=`curl https://clasweb.jlab.org/clas12offline/sqlite/ccdb/LATEST`
+echo latest snapshot version of CCDB is ${version}
+# copy this file to somewhere on your computer.  Replace ${directory} with the actual directory where you want
+# to put the file
+wget https://clasweb.jlab.org/clas12offline/sqlite/ccdb/ccdb_${version}.sqlite ${directory}/ccdb_${version}.sqlite
+#check to make sure the file has been copied to the destination directory
+ls ${directory}/ccdb_${version}.sqlite 
+
+Next add the following lines to your ~/.bashrc (Linux) or ~/.bash_profile (Mac), replacing ${directory} with the absolute path to the directory where the file is located) and ${version} with the version of the ccdb file.  Also, replace ${username} with the username that you want to register yourself as in the ccdb:
+
+export CCDB_CONNECTION=sqlite:///${directory}/ccdb_${version}.sqlite
+export CCDB_USER=${username}
+
+For instance, I have in my .bashrc file:
+
+export CCDB_CONNECTION=sqlite:////home/sebouh/input_for_alignment/ccdb_2022-01-16.sqlite
+export CCDB_USER=sebouh
 
 Then run the following line of code in your console:
 source ~/.bashrc # if you are using Linux
 OR
 source ~/.bash_profile # if you are using MacOS
 
-To test the ccdb installation, try running "ccdb -i".  If this brings up an error message (which it does on some computers), then unzip and untar the file ccdb.tar.gz that is in this folder, and replace the ccdb utility from the github repository with the one from the tar.gz file.  Hopefully "ccdb -i" works when using this version of the ccdb utility.  
+The version of the ccdb library that is on github at https://github.com/JeffersonLab/ccdb is not properly maintained.  Theferoefe I have included a working copy of this in the file alignment/clas12/ccdb.tar.gz.  Unzip and untar this file:
+gunzip ccdb.tar.gz
+tar -xvf ccdb.tar
 
-3)  If you haven't already done so, compile Martin Weber's alignment code (one folder up from this one).  
+Then add the following line to your ~/.bashrc (Linux) or ~/.bash_profile (MacOS) file:
+source /path/to/ccdb/environment.bash
 
-4)  Finally, To compile the various utils in this folder (clas12) do the following:
+The next step is to make sure that ccdb is installed correctly and that the ccdb sqlite is not corrupted.  First try running "ccdb -i" to enter interactive mode.  While in interactive mode, enter the following command:
+dump geometry/cvt/svt/layeralignment
+This should show a bunch of numbers. 
+
+8)  If you haven't already done so, compile Martin Weber's alignment code (one folder up from this one), following the instructions in alignment/README.  Since this analysis does not require the use of Weber's simulations, it is not necessary to install CLHEP, which is only included in the simulation package.
+
+9)  Finally, To compile the various utilities in this folder (alignment/clas12) do the following:
 ./compile_clas12_cvt_utils.sh
 
 
