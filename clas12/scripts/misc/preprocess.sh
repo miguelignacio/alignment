@@ -29,7 +29,7 @@ recon-util -o $recon_file -i $bank_updated_file -y $yamlfile
 
 hipo-utils -filter -b BST::adc,BMT::adc,RUN::config -s false -e $criterion -o $output_file $recon_file
 
-#rm $recon_file $bank_updated_file 
+rm $recon_file $bank_updated_file 
 
 echo created $output_file
 
