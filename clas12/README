@@ -15,6 +15,12 @@ Before running the scripts in this package, you will need the following software
 4) Python.  A programming language
 5) Scons.  A software construction tool.
 
+After installing these, run the following line to check to make sure that these are all accessible to you from the command line.  This will print out the locations of where the executables are located.  
+
+for program in java mvn root python scons; do which $program ; done
+
+If this fails, you may have to change your ${PATH} environmental variable, by adding a line like "PATH=${PATH}:/absolute/path/to/whatever/package/bin" to your ~/.bashrc (Linux) or ~/.bash_profile (MacOS), and then sourcing it (by typing "source ~/.bashrc" or "source ~/.bash_profile" in the terminal).  
+
 The following are very specific software packages either for clas12, JLab in general, or for running the kalman-filter based alignment.  If you are on a jlab computer, some of these may already be installed.  
 
 6) clas12-offline-software:  This package contains the code for reconstructing CLAS-12 data.  You will need to use the dev-align3 branch, which contains added functionality for extracting information needed for running alignment.  After downloading the project and checking out the correct branch, you will need to compile the package.  Note: even if you're on a JLab computer, which has clas12-offline-software installed on it, you'll need to install a separate copy of the clas12-offline-software to use for the alignment process, because the functionality needed for alignment is only available on a specific git branch.  
@@ -26,6 +32,7 @@ cd clas12-offline-software
 git checkout dev-align3
 # build the package
 ./build-coatjava.sh
+# If build-coatjava fails, try changing the line that starts with "python ..." to " 
 # add this line to your .bashrc (Linux) or .bash_profile (MacOS).  If clas12-offline-software is somewhere other than in your home directory (~), modify this line accordingly.  In the example shown below,  Then run "source ~/.bashrc" (Linux) or "source ~/.bash_profile" (MacOS)
 # clas12-offline-software is in the home directory
 export PATH=$PATH:~/clas12-offline-software/coatjava/bin
