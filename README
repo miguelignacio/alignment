@@ -12,7 +12,7 @@ Build instructions:
 This package relies on two external libraries, namely CLHEP
 (http://proj-clhep.web.cern.ch/proj-clhep/) and ROOT
 (http://root.cern.ch/). You will first need to install these packages.
-Adjust the SConstruct and the event/Makefile and util/Makefile accordingly.
+The SConstruct and event/Makefile use the environmental variables CLHEP_DIR, CLHEP_VERSION and ROOTSYS to determine the locations of CLHEP and ROOT.  So there should be no need to adjust the SConstruct and the event/Makefile and util/Makefile.  
 
 Currently two builder programs are used: SCons and make. First, you need to
 build two shared libraries. Go to the "event/" subdirectory and issue
