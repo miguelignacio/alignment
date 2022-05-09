@@ -90,8 +90,7 @@ jcache /mss/clas12/rg-b/data/clas_006342/*
 
 This will put in a request to cache the files in this directory, and put them in /cache/mss/... .  It may take a few minutes for the files to appear in the /cache/mss/... directory.  
 
-
-These (or the equivalent files from a different run group) need to be copied to the local machine, and then preprocessed.   The preprocessing includes
+These (or the equivalent files from a different run group) need to be copied to the local machine (for instance using scp), and then preprocessed.   The preprocessing includes:
 1) converting from evio to hipo format.  This must be done using the dev3-align branch of clas12-offline-software in order to make sure that all of the banks defined in this git branch are present.  
 2) running a preliminary reconstruction
 3) filtering out events that are not relevant for CVT alignment
