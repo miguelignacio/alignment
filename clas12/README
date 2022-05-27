@@ -7,23 +7,34 @@ This folder contains scripts to perform the following tasks involved in clas12 C
 6) Automating #2-#5 in an iterative process.  
 
 
-Before running the scripts in this package, you will need the following software packages.  The first 5 are common ones that you may already have installed on your computer for other projects, and can probably find the installation instructions on Google. The others are very specific ones. 
+Before running the scripts in this package, you will need the following software packages.  The first 5 are common ones that you may 
+already have installed on your computer for other projects, and can probably find the installation instructions on Google. The others 
+are very specific ones. Also, if you haven't already done so, create a user account on the CUE system at Jlab in order to be able access the files
+on there which are used for input for this.  
 
-1) Java.  A programming language.  The installed version must be a JDK (java development kit, which is capable of both compiling and executing java), and not a JRE (java runtime environment, which can only execute java).
+1) Java.  A programming language.  The installed version must be a JDK (java development kit, which is capable of both compiling 
+and executing java), and not a JRE (java runtime environment, which can only execute java).
 2) Maven.  This is a program maintained by Apache that is used for organizing the code when compilating large Java projects.  
 3) ROOT.  A CERN-maintained library for performing analyses and creating plots.
 4) Python.  A programming language
 5) Scons.  A software construction tool.
 
-After installing these, run the following line to check to make sure that these are all accessible to you from the command line.  This will print out the locations of where the executables are located.  
+After installing these, run the following line to check to make sure that these are all accessible to you from the command line.  
+This will print out the locations of where the executables are located.  
 
 for program in java mvn root python scons; do which $program ; done
 
-If this fails, you may have to change your ${PATH} environmental variable, by adding a line like "PATH=${PATH}:/absolute/path/to/whatever/package/bin" to your ~/.bashrc (Linux) or ~/.bash_profile (MacOS), and then sourcing it (by typing "source ~/.bashrc" or "source ~/.bash_profile" in the terminal).  
+If this fails, you may have to change your ${PATH} environmental variable, ie adding lines like "PATH=${PATH}:/absolute/path/to/whatever/package/bin" 
+to your ~/.bashrc (Linux) or ~/.bash_profile (MacOS), and then sourcing it (by typing "source ~/.bashrc" or "source ~/.bash_profile" in the terminal).  
 
-The following are very specific software packages either for clas12, JLab in general, or for running the kalman-filter based alignment.  If you are on a jlab computer, some of these may already be installed.  
+The following are very specific software packages either for clas12, JLab in general, or for running the kalman-filter based alignment.  
+If you are on a jlab computer, some of these may already be installed, and caveats are given for these.  
 
-6) clas12-offline-software:  This package contains the code for reconstructing CLAS-12 data.  You will need to use the dev-align3 branch, which contains added functionality for extracting information needed for running alignment.  After downloading the project and checking out the correct branch, you will need to compile the package.  Note: even if you're on a JLab computer, which has clas12-offline-software installed on it, you'll need to install a separate copy of the clas12-offline-software to use for the alignment process, because the functionality needed for alignment is only available on a specific git branch.  
+6) clas12-offline-software:  This package contains the code for reconstructing CLAS-12 data.  You will need to use the dev-align3 branch, 
+which contains added functionality for extracting information needed for running alignment.  After downloading the project and checking out 
+the correct branch, you will need to compile the package.  Note: even if you're on a JLab computer, which has clas12-offline-software installed 
+on it, you'll need to install a separate copy of the clas12-offline-software to use for the alignment process, because the functionality needed 
+for alignment is only available on a specific git branch.  
 
 # download the software
 git clone https://github.com/JeffersonLab/clas12-offline-software/
@@ -33,23 +44,28 @@ git checkout dev-align3
 # build the package
 ./build-coatjava.sh
 # If build-coatjava fails, and it complains about python, try changing the line  "python ..." to "python3 ..." in the build-coatjava.sh.  
-# add this line to your .bashrc (Linux) or .bash_profile (MacOS).  If clas12-offline-software is somewhere other than in your home directory (~), modify this line accordingly.  Then run "source ~/.bashrc" (Linux) or "source ~/.bash_profile" (MacOS)
+# add this line to your .bashrc (Linux) or .bash_profile (MacOS).  If clas12-offline-software is somewhere other than in your home directory 
+(~), modify this line accordingly.  Then run "source ~/.bashrc" (Linux) or "source ~/.bash_profile" (MacOS)
 export PATH=$PATH:~/clas12-offline-software/coatjava/bin
 
 
 7)  ccdb:  calibration conditions database package for clas12. 
 
-First, you must obtain the most recent snapshot (sqlite) of the CCDB and copy to somewhere on your local computer.  The following steps will accomplish this:
+First, you must obtain the most recent snapshot (sqlite) of the CCDB and copy to somewhere on your local computer.  The following steps will 
+accomplish this:
 
 #find out what the latest version of the CCDB snapshot is
 version=`curl https://clasweb.jlab.org/clas12offline/sqlite/ccdb/LATEST`
 echo latest snapshot version of CCDB is ${version}
-# copy this file to somewhere on your computer, by running the following command, but replace ${directory} with the actual directory where you want to put the file in:
+# copy this file to somewhere on your computer, by running the following command, but replace ${directory} with the actual directory where 
+# you want to put the file in:
 wget https://clasweb.jlab.org/clas12offline/sqlite/ccdb/ccdb_${version}.sqlite ${directory}/ccdb_${version}.sqlite
 #check to make sure the file has been copied to the destination directory
 ls ${directory}/ccdb_${version}.sqlite 
 
-Next add the following lines to your ~/.bashrc (Linux) or ~/.bash_profile (Mac), replacing ${directory} with the absolute path to the directory where the file is located) and ${version} with the version of the ccdb file.  Also, replace ${username} with the username that you want to register yourself as in the ccdb:
+Next add the following lines to your ~/.bashrc (Linux) or ~/.bash_profile (Mac), replacing ${directory} with the absolute path to the 
+directory where the file is located) and ${version} with the version of the ccdb file.  Also, replace ${username} with the username that 
+you want to register yourself as in the ccdb:
 
 export CCDB_CONNECTION=sqlite:///${directory}/ccdb_${version}.sqlite
 export CCDB_USER=${username}
@@ -64,18 +80,23 @@ source ~/.bashrc # if you are using Linux
 OR
 source ~/.bash_profile # if you are using MacOS
 
-The version of the ccdb library that is on github at https://github.com/JeffersonLab/ccdb is not properly maintained.  Thefefore I have included a working copy of this in the file alignment/clas12/ccdb.tar.gz.  Unzip and untar this file:
+The version of the ccdb library that is on github at https://github.com/JeffersonLab/ccdb is not properly maintained.  Thefefore I have 
+included a working copy of this in the file alignment/clas12/ccdb.tar.gz.  Unzip and untar this file:
 gunzip ccdb.tar.gz
 tar -xvf ccdb.tar
 
-Then add the following line to your ~/.bashrc (Linux) or ~/.bash_profile (MacOS) file (replacing /path/to/ with the directory where ccdb is installed in), and then run "source ~/.bashrc" or "source ~/.bash_profile":
+Then add the following line to your ~/.bashrc (Linux) or ~/.bash_profile (MacOS) file (replacing /path/to/ with the directory where 
+ccdb is installed in), and then run "source ~/.bashrc" or "source ~/.bash_profile":
 source /path/to/ccdb/environment.bash
 
-The next step is to make sure that ccdb is installed correctly and that the ccdb sqlite is not corrupted.  First try running "ccdb -i" to enter interactive mode.  While in interactive mode, enter the following command:
+The next step is to make sure that ccdb is installed correctly and that the ccdb sqlite is not corrupted.  First try running "ccdb -i"
+to enter interactive mode.  While in interactive mode, enter the following command:
 dump geometry/cvt/svt/layeralignment
 This should show a bunch of numbers, corresponding to the alignment values for the svt.
 
-8)  If you haven't already done so, compile Martin Weber's alignment code (one folder up from this one), following the instructions in alignment/README.  Since this analysis does not require the use of Weber's simulations, it is not necessary to install CLHEP, which is only included in Weber's simulation package (which is not used in the Clas12 CVT alignment process).
+8)  If you haven't already done so, compile Martin Weber's alignment code (one folder up from this one), following the instructions 
+in alignment/README.  Since this analysis does not require the use of Weber's simulations, it is not necessary to install CLHEP, 
+which is only included in Weber's simulation package (which is not used in the Clas12 CVT alignment process).
 
 9)  Finally, to compile the various utilities in this folder (alignment/clas12) do the following:
 ./compile_clas12_cvt_utils.sh
@@ -83,14 +104,22 @@ This should show a bunch of numbers, corresponding to the alignment values for t
 
 To perform alignment:
 
-First obtain the input evio files.  For the RGB spring 2019 run period, the runs needed for alignment are 6342 (field-off tracks from the target) and 6117 (cosmic tracks).  The locations of these files at jlab are /mss/clas12/rg-b/data/clas_006342/ for run 6342 and /work/clas12/users/gotra/alignment/6117/evio/ for run 6117.  However, since the files in the mss are on the tape, they cannot be accessed directly, but rather through the write-through cache.  (see https://scicomp.jlab.org/docs/write-through-cache ).  If these files are not in /cache/mss/clas12/rg-b/data/clas_006342/, run the following command
+First obtain the input evio files.  For the RGB spring 2019 run period, the runs needed for alignment are 6342 (field-off tracks 
+from the target) and 6117 (cosmic tracks).  The locations of these files at jlab are /mss/clas12/rg-b/data/clas_006342/ for run 6342
+and /work/clas12/users/gotra/alignment/6117/evio/ for run 6117.  However, since the files in the mss are on the tape, they cannot be 
+accessed directly, but rather through the write-through cache.  (see https://scicomp.jlab.org/docs/write-through-cache ).  If these 
+files are not in /cache/mss/clas12/rg-b/data/clas_006342/, run the following command
 
 jcache /mss/clas12/rg-b/data/clas_006342/*
 
-This will put in a request to cache the files in this directory, and put them in /cache/mss/... .  It may take a few minutes for the files to appear in the /cache/mss/... directory.  
+This will put in a request to cache the files in this directory, and put them in /cache/mss/... .  It may take a few minutes for the 
+files to appear in the /cache/mss/... directory.  
 
-These (or the equivalent files from a different run group) need to be copied to the local machine (for instance using scp), and then preprocessed.   The preprocessing includes:
-1) converting from evio to hipo format.  This must be done using the dev3-align branch of clas12-offline-software in order to make sure that all of the banks defined in this git branch are present.  
+These (or the equivalent files from a different run group) need to be copied to the local machine (for instance using 
+"scp cueaccountusername@scigw.jlab.org:/location/of/file/on/cue/account destination/on/local/machine"), and then preprocessed.   
+The preprocessing includes:
+1) converting from evio to hipo format.  This must be done using the dev3-align branch of clas12-offline-software in order to 
+make sure that all of the banks defined in this git branch are present.  
 2) running a preliminary reconstruction
 3) filtering out events that are not relevant for CVT alignment
 4) removing the preliminary reconstruction information.  
@@ -100,27 +129,40 @@ cd scripts/misc/
 ./preprocess.sh input.evio.xxx output.hipo
 (or "./preprocess.sh input.evio.xxx output.hipo --cosmic" if the file is a cosmics data file)
 
-To multi-threadedly preprocess all of the evio files in a given directory (recommended) and merge the preprocessed files (make sure to add the "--cosmic" arg at the end if you're running this on the cosmics files):
+To multi-threadedly preprocess all of the evio files in a given directory (recommended) and merge the preprocessed files 
+(make sure to add the "--cosmic" arg at the end if you're running this on the cosmics files):
 cd scripts/misc/
 ./preprocess_and_merge.sh input_dir output.hipo 
 
-One can alternatively run preprocessing on existing hipo files.  This will update the index to make sure that all of the banks defined in the dev3-align branch of clas12-offline-software are defined.  
+One can alternatively run preprocessing on existing hipo files.  This will update the index to make sure that all of the 
+banks defined in the dev3-align branch of clas12-offline-software are defined.  
 
 
-After preprocessing the files, you can then use these files for alignment.  Go to the "generic" scripts folder (alignment/clas12/scripts/generic), where the scripts for running iterations of recon, KAA and ccdb updates can be found.  
+After preprocessing the files, you can then use these files for alignment.  Go to the "generic" scripts folder 
+(alignment/clas12/scripts/generic), where the scripts for running iterations of recon, KAA and ccdb updates can be found.  
+
 cd scripts/generic
 
 Then, copy the file ./iterate_for_paper.sh to another name
+
 cp ./iterate_for_paper.sh ./iterate_custom.sh
+
 Edit the file ./iterate_custom.sh and change the names of the input field-off and cosmic files used.  Other options can be edited as well.  
 
-Below are the lines that should be modified, which set the locations of the files used for input and for the ccdb.  zf stands for "Zero [magnetic] field", and refers to the file with tracks from the target with the solenoid turned off.  To run reconstruction with only cosmics or only field-off tracks from the target, set the other input file name to be blank (for example, "export input_file_zf=" if you want to do cosmics only).  
+Below are the lines that should be modified, which set the locations of the files used for input and for the ccdb.  
+zf stands for "Zero [magnetic] field", and refers to the file with tracks from the target with the solenoid turned off.  
+To run reconstruction with only cosmics or only field-off tracks from the target, set the other input file name to be blank 
+(for example, "export input_file_zf=" if you want to do cosmics only).  
 
 export input_file_zf=$HOME/input_for_alignment/fieldoff_6342.hipo 
 export input_file_cosmics=$HOME/input_for_alignment/cosmic_6117.hipo  
 export CCDB_CONNECTION=sqlite:///$HOME/input_for_alignment/ccdb_2022-01-16.sqlite
 
 
-Running ./iterate_custom.sh will begin the iterative process.   Folders with names plots_pass_1, etc will be created in the clas12/scripts/generic directory.  These will contain the reconstructed hipo files, the input file for the KAA, the output of the KAA, text files with the new alignment parameters, and a large number of diagnostic plots, produced in each iteration.  The final alignment parameters can be found in plot_pass_N/devN_bmt.txt and plot_pass_N/devN_svt.txt, where N is the number of iterations specified in the iteration script.  
+Running ./iterate_custom.sh will begin the iterative process.   Folders with names plots_pass_1, etc will be created in the 
+alignment/clas12/scripts/generic directory.  These will contain the reconstructed hipo files, the input file for the KAA, 
+the output of the KAA, text files with the new alignment parameters, and a large number of diagnostic plots, produced in each 
+iteration.  The final alignment parameters can be found in plot_pass_N/devN_bmt.txt and plot_pass_N/devN_svt.txt, where N is 
+the number of iterations specified in the iteration script.  
 
 
