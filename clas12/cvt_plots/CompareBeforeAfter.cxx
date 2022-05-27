@@ -767,20 +767,20 @@ int main(int argc, char * argv[]) {
     
     c1->cd(1);
     //legend1->AddEntry(residuals_svt, Form(suffix + ",\n RMS = %.2f mm, fit #sigma = %.3f mm",residuals_svt->GetRMS(), getSigma(residuals_svt)),"l");
-    //legend1->AddEntry(residuals_svt, Form(suffix + ",\n mean = %.0f #mum, std = %.0f #mum",1000*getMeanTruncated(residuals_svt,0), 1000*getStdTruncated(residuals_svt,0),"l"));
-    legend1->AddEntry(residuals_svt, Form(suffix + ",\n mode = %.0f #mum, FWHM = %.0f #mum",1000*getMode(residuals_svt), 1000*getFWHM(residuals_svt),"l")); 
+    legend1->AddEntry(residuals_svt, Form(suffix + ",\n mean = %.0f #mum, std = %.0f #mum",1000*getMeanTruncated(residuals_svt,0), 1000*getStdTruncated(residuals_svt,0),"l"));
+      //legend1->AddEntry(residuals_svt, Form(suffix + ",\n mode = %.0f #mum, FWHM = %.0f #mum",1000*getMode(residuals_svt), 1000*getFWHM(residuals_svt),"l")); 
     residuals_svt->SetTitleSize(0.05, "T");  
     residuals_svt->Draw(opt);
     residuals_svt->SetMaximum(residuals_svt->GetMaximum()*(isMC ? 7 : 5.5));
     c1->cd(2);
     //legend2->AddEntry(residuals_bmtz, Form(suffix + ",\n RMS = %.2f mm, fit #sigma = %.2f mm",residuals_bmtz->GetRMS(), getSigma(residuals_bmtz)),"l");
-    legend2->AddEntry(residuals_bmtz, Form(suffix + ",\n mode = %.0f #mum, FWHM = %.0f #mum",getMode(residuals_bmtz)*1000, 1000*getFWHM(residuals_bmtz),"l"));
+    legend2->AddEntry(residuals_bmtz, Form(suffix + ",\n mean = %.0f #mum, std = %.0f #mum",1000*getMeanTruncated(residuals_bmtz)*1000, 1000*getStdTruncated(residuals_bmtz),"l"));
     residuals_bmtz->SetTitleSize(0.05, "T");
     residuals_bmtz->Draw(opt);
     residuals_bmtz->SetMaximum(residuals_bmtz->GetMaximum()*(isMC ? 9 : 7));
     c1->cd(3);
     //legend3->AddEntry(residuals_bmtc, Form(suffix+ ",\n RMS = %.2f mm, fit #sigma = %.2f mm",residuals_bmtc->GetRMS(), getSigma(residuals_bmtc)), "l");
-    legend3->AddEntry(residuals_bmtc, Form(suffix+ ",\n mode = %.0f #mum, FWHM = %.0f #mum",1000*getMode(residuals_bmtc), 1000*getFWHM(residuals_bmtc), "l"));
+    legend3->AddEntry(residuals_bmtc, Form(suffix+ ",\n mean = %.0f #mum, std = %.0f #mum",1000*getMeanTruncated(residuals_bmtc), 1000*getStdTruncated(residuals_bmtc), "l"));
     residuals_bmtc->SetTitleSize(0.05, "T");
     residuals_bmtc->Draw(opt);
     residuals_bmtc->SetMaximum(residuals_bmtc->GetMaximum()*(isMC ? 3 : 3.5));
