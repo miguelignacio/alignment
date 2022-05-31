@@ -154,6 +154,9 @@ double getStdTruncated(TH1* h, double q=0.10){
 }
 
 double getMeanTruncated(TH1* h, double q=0.10){
+  if (q==0){
+    return h->GetMean();
+  }
    TH1* cum = h->GetCumulative();
   cum->Scale(1/h->Integral());
   TH1* clo = (TH1*)h->Clone();
@@ -263,9 +266,11 @@ TGraphErrors* createProfile(TH2D * h, int color, int markerstyle, double shift,d
 	prev = bc;
       }
       x[i] =  h->GetXaxis()->GetBinCenter(i+1)+shift;
+      //x[i] = h->GetMean();
       ex[i] = 0;
 
       double yi=proj->GetBinCenter(maxbin);
+      
       /*if(proj->GetBinContent(maxbin+1)>proj->GetBinContent(maxbin-1)){
 	yi=(proj->GetXaxis()->GetBinCenter(maxbin)*proj->GetBinContent(maxbin)+proj->GetXaxis()->GetBinCenter(maxbin+1)*proj->GetBinContent(maxbin+1))/
 	  (proj->GetBinContent(maxbin)+proj->GetBinContent(maxbin+1));
@@ -275,7 +280,8 @@ TGraphErrors* createProfile(TH2D * h, int color, int markerstyle, double shift,d
           (proj->GetBinContent(maxbin)+proj->GetBinContent(maxbin-1));
       }*/ 
        
-      y[i] = yi;
+      y[i] = proj->GetMean();
+      cout << x[i] << " " << y[i] << " " << yi << endl;
       ey[i] = (right-left)/2;
       cout << "FWHM" << x[i] << " " << y[i] << " " << ey[i] << endl;
       if(proj->GetEntries()<10){
@@ -467,10 +473,12 @@ int main(int argc, char * argv[]) {
     gStyle->SetLabelSize(0.05, "XYZT");
     TH1F*  hchi2ndof = new TH1F("hchi2ndof"+suffix, "track #chi^{2}/ndof;track #chi^{2}/n_{dof};# of tracks", 100, 0, 20);
     
-    TH1F* residuals_svt = new TH1F ("res_svt"+suffix, "SVT residuals;residual [mm];# of clusters", 100+(fitType==2), -1.0*scaleWindows, 1.0*scaleWindows);
-    TH1F* residuals_bmtz = new TH1F ("res_bmtz"+suffix, "BMTZ residuals;residual [mm];# of clusters", 100+(fitType==2), -4.0*scaleWindows, 4.0*scaleWindows);
-    TH1F* residuals_bmtc = new TH1F ("res_bmtc"+suffix, "BMTC residuals;residual [mm];# of clusters", 100+(fitType==2), -2.0*scaleWindows, 2.0*scaleWindows);
+    TH1F* residuals_svt = new TH1F ("res_svt"+suffix, "SVT residuals;residual [mm];# of clusters", 500, -1.0*scaleWindows, 1.0*scaleWindows);
+    TH1F* residuals_bmtz = new TH1F ("res_bmtz"+suffix, "BMTZ residuals;residual [mm];# of clusters", 500, -4.0*scaleWindows, 4.0*scaleWindows);
+    TH1F* residuals_bmtc = new TH1F ("res_bmtc"+suffix, "BMTC residuals;residual [mm];# of clusters", 500, -2.0*scaleWindows, 2.0*scaleWindows);
 
+    cout << "500 bins" << endl;
+    
     hchi2ndof->GetYaxis()->SetMaxDigits(3);
     residuals_svt->GetYaxis()->SetMaxDigits(3);
     residuals_bmtz->GetYaxis()->SetMaxDigits(3);
@@ -483,12 +491,12 @@ int main(int argc, char * argv[]) {
     
 
     TString statlbl = " (gaus fit #mu#pm#sigma)";
-    if(fitType==2) statlbl = " (mode#pm FWHM/2)";
+    if(fitType==2) statlbl = " (mean#pm FWHM/2)";
     if(fitType==0) statlbl = " (mean#pm std)";
 
     gStyle->SetTitleSize(0.06, "XYZT");
     gStyle->SetLabelSize(0.06, "XYZT");
-    #define RESID_BINS 101, -3,3
+    #define RESID_BINS 500, -3,3
     TH2D* residuals_vs_module =  new TH2D ("res_mod_"+suffix, "Residuals (all modules);module # ;residual [mm]"+statlbl, 102, 0+shift_module, 102+shift_module,
                                            RESID_BINS);
     
@@ -767,20 +775,20 @@ int main(int argc, char * argv[]) {
     
     c1->cd(1);
     //legend1->AddEntry(residuals_svt, Form(suffix + ",\n RMS = %.2f mm, fit #sigma = %.3f mm",residuals_svt->GetRMS(), getSigma(residuals_svt)),"l");
-    legend1->AddEntry(residuals_svt, Form(suffix + ",\n mean = %.0f #mum, std = %.0f #mum",1000*getMeanTruncated(residuals_svt,0), 1000*getStdTruncated(residuals_svt,0),"l"));
+    legend1->AddEntry(residuals_svt, Form(suffix + ",\n mean = %.0f #mum, FWHM = %.0f #mum",1000*getMeanTruncated(residuals_svt,0), 1000*getFWHM(residuals_svt),"l"));
       //legend1->AddEntry(residuals_svt, Form(suffix + ",\n mode = %.0f #mum, FWHM = %.0f #mum",1000*getMode(residuals_svt), 1000*getFWHM(residuals_svt),"l")); 
     residuals_svt->SetTitleSize(0.05, "T");  
     residuals_svt->Draw(opt);
     residuals_svt->SetMaximum(residuals_svt->GetMaximum()*(isMC ? 7 : 5.5));
     c1->cd(2);
     //legend2->AddEntry(residuals_bmtz, Form(suffix + ",\n RMS = %.2f mm, fit #sigma = %.2f mm",residuals_bmtz->GetRMS(), getSigma(residuals_bmtz)),"l");
-    legend2->AddEntry(residuals_bmtz, Form(suffix + ",\n mean = %.0f #mum, std = %.0f #mum",1000*getMeanTruncated(residuals_bmtz,0)*1000, 1000*getStdTruncated(residuals_bmtz,0),"l"));
+    legend2->AddEntry(residuals_bmtz, Form(suffix + ",\n mean = %.0f #mum, FWHM = %.0f #mum",1000*getMeanTruncated(residuals_bmtz,0), 1000*getFWHM(residuals_bmtz),"l"));
     residuals_bmtz->SetTitleSize(0.05, "T");
     residuals_bmtz->Draw(opt);
     residuals_bmtz->SetMaximum(residuals_bmtz->GetMaximum()*(isMC ? 9 : 7));
     c1->cd(3);
     //legend3->AddEntry(residuals_bmtc, Form(suffix+ ",\n RMS = %.2f mm, fit #sigma = %.2f mm",residuals_bmtc->GetRMS(), getSigma(residuals_bmtc)), "l");
-    legend3->AddEntry(residuals_bmtc, Form(suffix+ ",\n mean = %.0f #mum, std = %.0f #mum",1000*getMeanTruncated(residuals_bmtc,0), 1000*getStdTruncated(residuals_bmtc,0), "l"));
+    legend3->AddEntry(residuals_bmtc, Form(suffix+ ",\n mean = %.0f #mum, FWHM = %.0f #mum",1000*getMeanTruncated(residuals_bmtc,0), 1000*getFWHM(residuals_bmtc), "l"));
     residuals_bmtc->SetTitleSize(0.05, "T");
     residuals_bmtc->Draw(opt);
     residuals_bmtc->SetMaximum(residuals_bmtc->GetMaximum()*(isMC ? 3 : 3.5));
@@ -813,24 +821,37 @@ int main(int argc, char * argv[]) {
       double worstMuSVT=0;
       double worstMuBMTZ=0;
       double worstMuBMTC=0;
+      double worstSigmaSVT=0;
+      double worstSigmaBMTZ=0;
+      double worstSigmaBMTC=0;
+      
       for (int k = 0; k<t->GetN(); k++){
         double mu = t->GetPointY(k);
+	double sigma=t->GetErrorY(k);
         if(k >=84 && k < 102){
           if (k <=86 || k>=93 && k<=95 || k>=99){
             if (abs(mu)>worstMuBMTC)
               worstMuBMTC=abs(mu);
-          } else {
+	    if (abs(sigma)>worstSigmaBMTC)
+	      worstSigmaBMTC=abs(sigma);
+          }
+	  else {
             if (abs(mu)>worstMuBMTZ){
               worstMuBMTZ=abs(mu);
             }
+	    if (abs(sigma)>worstSigmaBMTZ)
+              worstSigmaBMTZ=abs(sigma);
           }
         } else {
           if(abs(mu)>worstMuSVT){
             worstMuSVT=abs(mu);
           }
+	  if (abs(sigma)>worstSigmaSVT)
+	    worstSigmaSVT=abs(sigma);
         }
       }
       cout << "worst residuals for modules (SVT, BMTZ, BMTC): " << worstMuSVT <<", " << worstMuBMTZ << ", "<< worstMuBMTC<<  endl;
+      cout << "worst sigmas for modules (SVT, BMTZ, BMTC): " << worstSigmaSVT <<", " << worstSigmaBMTZ << ", "<< worstSigmaBMTC<<  endl;
     }
     t->GetHistogram()->SetMinimum(-1.15);
     t->GetHistogram()->SetMaximum(1.7);
