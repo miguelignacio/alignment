@@ -198,8 +198,15 @@ double getMode(TH1* h){
   return val;
 }
 
+double rebinThreshold=500;//250;
 
 double getFWHM(TH1* h){
+  //determine if the histogram needs to be rebinned
+  if(h->GetBinWidth(0)<rebinThreshold*h->GetStdDev()/h->GetEntries()){
+    cout << "rebinning histogram " << h->GetName() << endl;
+    h = h->Rebin((int)ceil(rebinThreshold*h->GetStdDev()/h->GetEntries()/h->GetBinWidth(0)));
+  }
+  
   int maxbin = h->GetMaximumBin();
   double max = h->GetBinContent(maxbin);
   double left = h->GetXaxis()->GetXmin();
@@ -243,7 +250,15 @@ TGraphErrors* createProfile(TH2D * h, int color, int markerstyle, double shift,d
     TH1* proj = h->ProjectionY("temp", i,i+1);
     
     if (fitType==2){ //full width at half max
-      int maxbin = proj->GetMaximumBin();                                                                                                             
+      if(proj->GetBinWidth(0)<rebinThreshold*proj->GetStdDev()/proj->Integral()){
+      //if(proj->GetBinWidth(0)<0.74*proj->GetStdDev()/pow(proj->Integral(),1/3.)){
+    cout << "rebinning histogram " << proj->GetName() << endl;
+    proj = proj->Rebin((int)ceil(rebinThreshold*proj->GetStdDev()/proj->Integral()/proj->GetBinWidth(0)));
+    //proj = proj->Rebin((int)ceil(0.74*proj->GetStdDev()/proj->Integral()/pow(proj->GetBinWidth(0),1/3.)));
+      } else {
+	cout << "no re-binning needed: bin width"  << proj->GetBinWidth(0) << "; sigma: "<<  proj->GetStdDev() << "; n=" << proj->Integral() << endl;
+      }
+      int maxbin = proj->GetMaximumBin();
       double max = proj->GetBinContent(maxbin);
       double left = proj->GetXaxis()->GetXmin();
       double right = proj->GetXaxis()->GetXmax();
@@ -397,6 +412,9 @@ int main(int argc, char * argv[]) {
     if (opt == "--fwhm"){
       fitType = 2;
       //exit(0);
+    }
+    if (opt.Contains("--rebinThreshold=")){
+      rebinThreshold=((TString)opt(17,opt.Sizeof())).Atof();
     }
   }
   
