@@ -334,9 +334,9 @@ int main(int argc, char * argv[]) {
   TH2* z_bmtz = new TH2D("z_bmtz", "BMTZ;z [cm];residual [mm]", 100, -25, 25, 100, -1.5, 1.5);
   TH2* z_bmtc = new TH2D("z_bmtc", "BMTC;z [cm];residual [mm]", 100, -25, 25, 100, -1.5, 1.5);
 
-  TH2* phi_svt = new TH2D("phi_svt", "SVT;phi [deg];residual [mm]", 100, -180, 180, 100, -0.5, 0.5);
-  TH2* phi_bmtz = new TH2D("phi_bmtz", "BMTZ;phi [deg];residual [mm]", 100, -180, 180, 100, -1.5, 1.5);
-  TH2* phi_bmtc = new TH2D("phi_bmtc", "BMTC;phi [deg];residual [mm]", 100, -180, 180, 100, -1.5, 1.5);
+  TH2* phi_svt = new TH2D("phi_svt", "SVT;#phi [deg];residual [mm]", 100, -180, 180, 100, -0.5, 0.5);
+  TH2* phi_bmtz = new TH2D("phi_bmtz", "BMTZ;#phi [deg];residual [mm]", 100, -180, 180, 100, -1.5, 1.5);
+  TH2* phi_bmtc = new TH2D("phi_bmtc", "BMTC;#phi [deg];residual [mm]", 100, -180, 180, 100, -1.5, 1.5);
   
   int ndof =0;
   float chi2 =0;
